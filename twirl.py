@@ -32,6 +32,7 @@ def main():
     reader_collector_pairs.extend([
         (Scribbler.EventAuxiliary(), NullCollector()),
         (Scribbler.MET(),            NullCollector()),
+        (Scribbler.HFPreRecHit(),    NullCollector()),
         # (Scribbler.Scratch(),        NullCollector()),
         ])
 
@@ -49,6 +50,20 @@ def main():
         dict(branchNames = ('lumi', ), binnings = (echo, )),
         dict(branchNames = ('eventId', ), binnings = (echo, )),
         dict(branchNames = ('pfMet', ), binnings = (Round(10, 0), )),
+        dict(
+            branchNames = ('hfrechit_QIE10_energy', ),
+            binnings = (Round(0.1, 0), ),
+            indices = ('(*)', ),
+            outColumnNames = ('energy', ),
+
+        ),
+        dict(
+            branchNames = ('hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_QIE10_index', 'hfrechit_QIE10_energy'),
+            binnings = (echo, echo, echo, Round(0.1, 0)),
+            indices = ('(*)', '\\1', '\\1', '\\1'),
+            outColumnNames = ('ieta', 'iphi', 'idxQIE10', 'energy'),
+
+        ),
     ]
 
     # complete table configs
