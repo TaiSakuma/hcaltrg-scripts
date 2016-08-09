@@ -46,28 +46,26 @@ def main():
     Combine = AlphaTwirl.Binning.Combine
     echo = Echo(nextFunc = None)
     tblcfg = [
-        dict(branchNames = ('run', ), binnings = (echo, )),
-        dict(branchNames = ('lumi', ), binnings = (echo, )),
-        dict(branchNames = ('eventId', ), binnings = (echo, )),
-        dict(branchNames = ('pfMet', ), binnings = (Round(10, 0), )),
-        # dict(
-        #     branchNames = ('hfrechit_QIE10_energy', ),
-        #     binnings = (Round(0.1, 0), ),
-        #     indices = ('(*)', ),
-        #     outColumnNames = ('energy', ),
-        #
-        # ),
-        # dict(
-        #     branchNames = ('hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_QIE10_index', 'hfrechit_QIE10_energy'),
-        #     binnings = (echo, echo, echo, Round(0.1, 0)),
-        #     indices = ('(*)', '\\1', '\\1', '\\1'),
-        #     outColumnNames = ('ieta', 'iphi', 'idxQIE10', 'energy'),
-        # ),
+        dict(keyAttrNames = ('run', ), binnings = (echo, )),
+        dict(keyAttrNames = ('lumi', ), binnings = (echo, )),
+        dict(keyAttrNames = ('eventId', ), binnings = (echo, )),
+        dict(keyAttrNames = ('pfMet', ), binnings = (Round(10, 0), )),
+        dict(
+            keyAttrNames = ('hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_QIE10_index'),
+            keyIndices = ('(*)', '\\1', '\\1'),
+            binnings = (echo, echo, echo),
+            valAttrNames = ('hfrechit_QIE10_energy', ),
+            valIndices = ('\\1', ),
+            keyOutColumnNames = ('ieta', 'iphi', 'idxQIE10'),
+            valOutColumnNames = ('energy', ),
+            summaryClass = AlphaTwirl.Summary.Sum,
+            outFile = True,
+        ),
     ]
 
     # complete table configs
     tableConfigCompleter = AlphaTwirl.Configure.TableConfigCompleter(
-        defaultCountsClass = AlphaTwirl.Summary.Count,
+        defaultSummaryClass = AlphaTwirl.Summary.Count,
         defaultOutDir = args.outdir
     )
     tblcfg = [tableConfigCompleter.complete(c) for c in tblcfg]
@@ -78,13 +76,6 @@ def main():
 
     reader_collector_pairs.extend(
         [AlphaTwirl.Configure.build_counter_collector_pair(c) for c in tblcfg]
-    )
-
-    #
-    # add custom readers
-    #
-    reader_collector_pairs.extend(
-        build_custom_reader_collector_pairs()
     )
 
     #
@@ -100,61 +91,6 @@ def main():
         dataset = dataset,
         reader_collector_pairs = reader_collector_pairs
     )
-
-##__________________________________________________________________||
-def build_custom_reader_collector_pairs():
-    ret = [ ]
-
-    Binning = AlphaTwirl.Binning.Binning
-    Echo = AlphaTwirl.Binning.Echo
-    Round = AlphaTwirl.Binning.Round
-    RoundLog = AlphaTwirl.Binning.RoundLog
-    Combine = AlphaTwirl.Binning.Combine
-    echo = Echo(nextFunc = None)
-    tblcfg = [
-        dict(
-            keyAttrNames = ('hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_QIE10_index'),
-            keyIndices = ('(*)', '\\1', '\\1'),
-            binnings = (echo, echo, echo),
-            valAttrNames = ('hfrechit_QIE10_energy', ),
-            valIndices = ('\\1', ),
-            keyOutColumnNames = ('ieta', 'iphi', 'idxQIE10'),
-            valOutColumnNames = ('energy', ),
-            countsClass = AlphaTwirl.Summary.Sum,
-            outFilePath = os.path.join(args.outdir, 'tbl_custom_hfprefechit_energy.txt'),
-            outFile = True,
-        ),
-    ]
-    ret.extend([custom_build_counter_collector_pair(c) for c in tblcfg])
-
-    return ret
-
-##__________________________________________________________________||
-from AlphaTwirl.Summary import NextKeyComposer, KeyValueComposer
-from AlphaTwirl.CombineIntoList import CombineIntoList
-from AlphaTwirl.WriteListToFile import WriteListToFile
-from AlphaTwirl.Loop import Collector
-def custom_build_counter_collector_pair(tblcfg):
-    keyValComposer = KeyValueComposer(
-        keyAttrNames = tblcfg['keyAttrNames'],
-        binnings = tblcfg['binnings'],
-        keyIndices = tblcfg['keyIndices'],
-        valAttrNames = tblcfg['valAttrNames'],
-        valIndices = tblcfg['valIndices']
-    )
-    nextKeyComposer = NextKeyComposer(tblcfg['binnings'])
-    summarizer = AlphaTwirl.Summary.Summarizer(
-        keyValComposer = keyValComposer,
-        summary = tblcfg['countsClass'](),
-        nextKeyComposer = nextKeyComposer,
-    )
-    resultsCombinationMethod = CombineIntoList(
-        keyNames = tblcfg['keyOutColumnNames'],
-        valNames = tblcfg['valOutColumnNames']
-    )
-    deliveryMethod = WriteListToFile(tblcfg['outFilePath']) if tblcfg['outFile'] else None
-    collector = Collector(resultsCombinationMethod, deliveryMethod)
-    return summarizer, collector
 
 ##__________________________________________________________________||
 if __name__ == '__main__':
