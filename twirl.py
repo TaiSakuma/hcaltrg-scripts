@@ -113,94 +113,33 @@ def build_custom_reader_collector_pairs():
     echo = Echo(nextFunc = None)
     tblcfg = [
         dict(
-            branchNames = ('pfMet', ),
-            binnings = (Round(10, 0), ),
-            weight = AlphaTwirl.Summary.WeightCalculatorOne(),
-            outFilePath = os.path.join(args.outdir, 'tbl_custom_counts_test.txt'),
+            keyAttrNames = ('hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_QIE10_index'),
+            keyIndices = ('(*)', '\\1', '\\1'),
+            binnings = (echo, echo, echo),
+            valAttrNames = ('hfrechit_QIE10_energy', ),
+            valIndices = ('\\1', ),
+            keyOutColumnNames = ('ieta', 'iphi', 'idxQIE10'),
+            valOutColumnNames = ('energy', ),
+            countsClass = AlphaTwirl.Summary.Sum,
+            outFilePath = os.path.join(args.outdir, 'tbl_custom_hfprefechit_energy.txt'),
             outFile = True,
-            countsClass = CustomCounts,
-            outColumnNames = ('met',),
-            indices = None,
         ),
     ]
-    # ret.extend([custom_build_counter_collector_pair(c) for c in tblcfg])
+    ret.extend([custom_build_counter_collector_pair(c) for c in tblcfg])
 
-    outFilePath = os.path.join(args.outdir, 'tbl_custom_hfprefechit_energy.txt')
-    resultsCombinationMethod = CombineIntoList(
-        keyNames = ('ieta', 'iphi'),
-        valNames = ('energy', )
-    )
-    deliveryMethod = WriteListToFile(outFilePath)
-    collector = Collector(resultsCombinationMethod, deliveryMethod)
-    ret.append([HFPreRecHit(), collector])
+    # outFilePath = os.path.join(args.outdir, 'tbl_custom_hfprefechit_energy.txt')
+    # resultsCombinationMethod = CombineIntoList(
+    #     keyNames = ('ieta', 'iphi'),
+    #     valNames = ('energy', )
+    # )
+    # deliveryMethod = WriteListToFile(outFilePath)
+    # collector = Collector(resultsCombinationMethod, deliveryMethod)
+    # ret.append([HFPreRecHit(), collector])
 
     return ret
 
 ##__________________________________________________________________||
 import collections
-class CustomCounts(object):
-    def __init__(self):
-        self._counts = { }
-        self.branchValName = 'energy'
-        self.outColumnValName = 'energy0'
-
-    def count(self, key, w = 1, nvar = None):
-        self.addKey(key)
-        self._counts[key][self.outColumnValName] += w
-
-    def addKey(self, key):
-        if key not in self._counts:
-            self._counts[key] = collections.OrderedDict(((self.outColumnValName, 0.0), ))
-
-    def keys(self):
-        return self._counts.keys()
-
-    def valNames(self):
-        return ('n', )
-
-    def copyFrom(self, src):
-        self._counts.clear()
-        self._counts.update(src._counts)
-
-    def results(self):
-        return self._counts
-
-##__________________________________________________________________||
-from AlphaTwirl.Summary.WeightCalculatorOne import WeightCalculatorOne
-class CustomSummarizer(object):
-    def __init__(self, keyComposer, countMethod, nextKeyComposer = None,
-                 weightCalculator = WeightCalculatorOne()):
-        self.keyComposer = keyComposer
-        self.countMethod = countMethod
-        self.weightCalculator = weightCalculator
-        self.nextKeyComposer = nextKeyComposer
-
-    def begin(self, event):
-        self.keyComposer.begin(event)
-
-    def event(self, event):
-        keys = self.keyComposer(event)
-        print keys
-        weight = self.weightCalculator(event)
-        for key in keys:
-            self.countMethod.count(key, weight)
-
-    def end(self):
-        if self.nextKeyComposer is None: return
-        for key in sorted(self.countMethod.keys()):
-            nextKeys = self.nextKeyComposer(key)
-            for nextKey in nextKeys: self.countMethod.addKey(nextKey)
-
-    def valNames(self):
-        return self.countMethod.valNames()
-
-    def copyFrom(self, src):
-        self.countMethod.copyFrom(src.countMethod)
-
-    def results(self):
-        return self.countMethod.results()
-
-##__________________________________________________________________||
 class HFPreRecHit(object):
     def __init__(self):
         self.outColumnValName = ('ieta', 'iphi', 'idxQIE10')
@@ -239,18 +178,22 @@ from AlphaTwirl.WriteListToFile import WriteListToFile
 from AlphaTwirl.Loop import Collector
 def custom_build_counter_collector_pair(tblcfg):
     keyValComposer = KeyValueComposer(
-        keyAttrNames = tblcfg['branchNames'],
+        keyAttrNames = tblcfg['keyAttrNames'],
         binnings = tblcfg['binnings'],
-        keyIndices = tblcfg['indices']
+        keyIndices = tblcfg['keyIndices'],
+        valAttrNames = tblcfg['valAttrNames'],
+        valIndices = tblcfg['valIndices']
     )
     nextKeyComposer = NextKeyComposer(tblcfg['binnings'])
-    summarizer = CustomSummarizer(
+    summarizer = AlphaTwirl.Summary.Summarizer(
         keyValComposer = keyValComposer,
         summary = tblcfg['countsClass'](),
         nextKeyComposer = nextKeyComposer,
-        weightCalculator = tblcfg['weight']
     )
-    resultsCombinationMethod = CombineIntoList(keyNames = tblcfg['outColumnNames'], valNames = ('n', 'nvar'))
+    resultsCombinationMethod = CombineIntoList(
+        keyNames = tblcfg['keyOutColumnNames'],
+        valNames = tblcfg['valOutColumnNames']
+    )
     deliveryMethod = WriteListToFile(tblcfg['outFilePath']) if tblcfg['outFile'] else None
     collector = Collector(resultsCombinationMethod, deliveryMethod)
     return summarizer, collector
