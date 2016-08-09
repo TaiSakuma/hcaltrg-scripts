@@ -13,14 +13,14 @@ class Framework(object):
 
     def run(self, dataset, reader_collector_pairs):
         self._begin()
-        reader_top = AlphaTwirl.EventReader.ReaderComposite()
-        collector_top = AlphaTwirl.EventReader.CollectorComposite(self.progressMonitor.createReporter())
+        reader_top = AlphaTwirl.Loop.ReaderComposite()
+        collector_top = AlphaTwirl.Loop.CollectorComposite(self.progressMonitor.createReporter())
         for r, c in reader_collector_pairs:
             reader_top.add(r)
             collector_top.add(c)
-        eventLoopRunner = AlphaTwirl.EventReader.MPEventLoopRunner(self.communicationChannel)
+        eventLoopRunner = AlphaTwirl.Loop.MPEventLoopRunner(self.communicationChannel)
         eventBuilder = EventBuilder()
-        eventReader = AlphaTwirl.EventReader.EventReader(eventBuilder, eventLoopRunner, reader_top, collector_top)
+        eventReader = AlphaTwirl.Loop.EventReader(eventBuilder, eventLoopRunner, reader_top, collector_top)
         eventReader.begin()
         eventReader.read(dataset)
         eventReader.end()
