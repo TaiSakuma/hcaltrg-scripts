@@ -78,22 +78,6 @@ class HFPreRecHit(object):
         self.hfrechit_QIE10_index[:] = [0]*len(hfPreRecoHits) + [1]*len(hfPreRecoHits)
         self.hfrechit_QIE10_energy[:] = [h.getHFQIE10Info(i).energy() for i in (0, 1) for h in hfPreRecoHits] + [h.getHFQIE10Info(1).energy() for h in hfPreRecoHits]
 
-        # print self.hfrechit_QIE10_0_energy
-        return
-        for rechit in hfPreRecoHits:
-            print rechit.id().ieta(),
-            print rechit.id().iphi(),
-            print rechit.getHFQIE10Info(0).charge(),
-            print rechit.getHFQIE10Info(0).energy(),
-            print rechit.getHFQIE10Info(0).timeRising(),
-            print rechit.getHFQIE10Info(0).timeFalling(),
-            print rechit.getHFQIE10Info(0).nRaw(),
-            print rechit.getHFQIE10Info(0).soi(),
-            print
-
-        # print hfPreRecoHit.getHFQIE10Info(0)
-        # print hfPreRecoHit.getHFQIE10Info(1)
-
     def end(self):
         self.handleHFPreRecHit = None
 
