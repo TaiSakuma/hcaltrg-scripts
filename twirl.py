@@ -125,9 +125,11 @@ def build_custom_reader_collector_pairs():
     ]
     # ret.extend([custom_build_counter_collector_pair(c) for c in tblcfg])
 
-    outColumnNames = ('ieta', 'iphi', 'idxQIE10')
     outFilePath = os.path.join(args.outdir, 'tbl_custom_hfprefechit_energy.txt')
-    resultsCombinationMethod = CombineIntoList(keyNames = outColumnNames, valNames = ('n', 'nvar'))
+    resultsCombinationMethod = CombineIntoList(
+        keyNames = ('ieta', 'iphi'),
+        valNames = ('energy', )
+    )
     deliveryMethod = WriteListToFile(outFilePath)
     collector = Collector(resultsCombinationMethod, deliveryMethod)
     ret.append([HFPreRecHit(), collector])
@@ -165,7 +167,7 @@ class CustomCounts(object):
 
 ##__________________________________________________________________||
 from AlphaTwirl.Summary.WeightCalculatorOne import WeightCalculatorOne
-class CustomSummary(object):
+class CustomSummarizer(object):
     def __init__(self, keyComposer, countMethod, nextKeyComposer = None,
                  weightCalculator = WeightCalculatorOne()):
         self.keyComposer = keyComposer
@@ -178,6 +180,7 @@ class CustomSummary(object):
 
     def event(self, event):
         keys = self.keyComposer(event)
+        print keys
         weight = self.weightCalculator(event)
         for key in keys:
             self.countMethod.count(key, weight)
@@ -187,7 +190,7 @@ class CustomSummary(object):
         for key in sorted(self.countMethod.keys()):
             nextKeys = self.nextKeyComposer(key)
             for nextKey in nextKeys: self.countMethod.addKey(nextKey)
- 
+
     def valNames(self):
         return self.countMethod.valNames()
 
@@ -222,10 +225,7 @@ class HFPreRecHit(object):
 
     def end(self): pass
 
-    def valNames(self):
-        return (self.outColumnValName, )
-
-    def copyFrom(self, src):
+    def copy_from(self, src):
         self._counts.clear()
         self._counts.update(src._counts)
 
@@ -244,7 +244,7 @@ def custom_build_counter_collector_pair(tblcfg):
         keyIndices = tblcfg['indices']
     )
     nextKeyComposer = NextKeyComposer(tblcfg['binnings'])
-    summarizer = CustomSummary(
+    summarizer = CustomSummarizer(
         keyValComposer = keyValComposer,
         summary = tblcfg['countsClass'](),
         nextKeyComposer = nextKeyComposer,
