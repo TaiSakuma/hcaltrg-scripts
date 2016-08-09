@@ -127,49 +127,7 @@ def build_custom_reader_collector_pairs():
     ]
     ret.extend([custom_build_counter_collector_pair(c) for c in tblcfg])
 
-    # outFilePath = os.path.join(args.outdir, 'tbl_custom_hfprefechit_energy.txt')
-    # resultsCombinationMethod = CombineIntoList(
-    #     keyNames = ('ieta', 'iphi'),
-    #     valNames = ('energy', )
-    # )
-    # deliveryMethod = WriteListToFile(outFilePath)
-    # collector = Collector(resultsCombinationMethod, deliveryMethod)
-    # ret.append([HFPreRecHit(), collector])
-
     return ret
-
-##__________________________________________________________________||
-import collections
-class HFPreRecHit(object):
-    def __init__(self):
-        self.outColumnValName = ('ieta', 'iphi', 'idxQIE10')
-        self.outColumnValName = 'energy'
-
-        self._counts = { }
-
-    def begin(self, event): pass
-
-    def event(self, event):
-        for c in zip(
-            event.hfrechit_ieta,
-            event.hfrechit_iphi,
-            event.hfrechit_QIE10_index,
-            event.hfrechit_QIE10_energy,
-            ):
-            key = c[0:3]
-            val = c[3]
-            if key not in self._counts:
-                self._counts[key] = collections.OrderedDict(((self.outColumnValName, 0.0), ))
-            self._counts[key][self.outColumnValName] += val
-
-    def end(self): pass
-
-    def copy_from(self, src):
-        self._counts.clear()
-        self._counts.update(src._counts)
-
-    def results(self):
-        return self._counts
 
 ##__________________________________________________________________||
 from AlphaTwirl.Summary import NextKeyComposer, KeyValueComposer
