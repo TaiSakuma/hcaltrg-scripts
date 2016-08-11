@@ -7,9 +7,13 @@ ROOT.gROOT.SetBatch(1)
 
 ##__________________________________________________________________||
 class Framework(object):
-    def __init__(self, quiet = False, process = 8):
+    def __init__(self, quiet = False, process = 8,
+                 max_events_per_dataset = -1,
+                 max_events_per_process = -1
+    ):
         self.progressMonitor, self.communicationChannel = AlphaTwirl.Configure.build_progressMonitor_communicationChannel(quiet = quiet, processes = process)
-
+        self.max_events_per_dataset = max_events_per_dataset
+        self.max_events_per_process = max_events_per_process
 
     def run(self, dataset, reader_collector_pairs):
         self._begin()
@@ -19,8 +23,14 @@ class Framework(object):
             reader_top.add(r)
             collector_top.add(c)
         eventLoopRunner = AlphaTwirl.Loop.MPEventLoopRunner(self.communicationChannel)
-        eventBuilder = EventBuilder()
-        eventReader = AlphaTwirl.Loop.EventReader(eventBuilder, eventLoopRunner, reader_top, collector_top)
+        eventBuilder = EventBuilder(maxEvents = self.max_events_per_dataset)
+        eventReader = AlphaTwirl.Loop.EventReader(
+            eventBuilder = eventBuilder,
+            eventLoopRunner = eventLoopRunner,
+            reader = reader_top,
+            collector = collector_top,
+            maxEventsPerRun = self.max_events_per_process
+        )
         eventReader.begin()
         eventReader.read(dataset)
         eventReader.end()
@@ -42,34 +52,46 @@ class Dataset(object):
 
 ##__________________________________________________________________||
 class Events(object):
-    def __init__(self, dataset):
+    def __init__(self, dataset, maxEvents = -1, start = 0):
 
-        self._edmEvents = EDMEvents(dataset.files)
+        if start < 0:
+            raise ValueError("start must be greater than or equal to zero: {} is given".format(start))
+
+        self.edm_event = EDMEvents(dataset.files)
         # https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/DataFormats/FWLite/python/__init__.py#L457
 
+        nevents_in_dataset = self.edm_event.size()
+        start = min(nevents_in_dataset, start)
+        if maxEvents > -1:
+            self.nEvents = min(nevents_in_dataset - start, maxEvents)
+        else:
+            self.nEvents = nevents_in_dataset - start
+        self.start = start
         self.iEvent = -1
-        self.nEvents = self._edmEvents.size()
 
     def __iter__(self):
-        it = iter(self._edmEvents)
-        while True:
-            try:
-                self.edm_event = next(it)
-                self.iEvent = self.edm_event._eventCounts
-                self.nEvents = self.edm_event.size()
-                yield self
-            except StopIteration:
-                break
+        for self.iEvent in xrange(self.nEvents):
+            self.edm_event.to(self.start + self.iEvent)
+            yield self
+        self.iEvent = -1
 
 ##__________________________________________________________________||
 class EventBuilder(object):
-    def __init__(self):
-        pass
+    def __init__(self, maxEvents = -1):
+        self.maxEvents = maxEvents
+
+    def getNumberOfEventsInDataset(self, dataset):
+        edm_event = EDMEvents(dataset.files)
+        return self._minimumPositiveValue([self.maxEvents, edm_event.size()])
 
     def build(self, dataset, start = 0, nEvents = -1):
-        return Events(dataset)
-        # return EDMEvents(dataset.files)
+        maxEvents = self._minimumPositiveValue([self.maxEvents, nEvents])
+        return Events(dataset, maxEvents, start)
 
+    def _minimumPositiveValue(self, vals):
+        vals = [v for v in vals if v >= 0]
+        if not vals: return -1
+        return min(vals)
 ##__________________________________________________________________||
 def loadLibraries():
     argv_org = list(sys.argv)

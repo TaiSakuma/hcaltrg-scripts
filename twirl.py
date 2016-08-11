@@ -17,6 +17,9 @@ parser.add_argument("-i", "--input", help = "the path to the input file")
 parser.add_argument("-p", "--process", default = 1, type = int, help = "number of processes to run in parallel")
 parser.add_argument('-o', '--outdir', default = os.path.join('tbl', 'out'))
 parser.add_argument('-q', '--quiet', action = 'store_true', default = False, help = 'quiet mode')
+
+parser.add_argument('-n', '--nevents', default = -1, type = int, help = 'maximum number of events to process for each component')
+parser.add_argument('--max-events-per-process', default = -1, type = int, help = 'maximum number of events per process')
 parser.add_argument('--force', action = 'store_true', default = False, help = 'recreate all output files')
 args = parser.parse_args()
 
@@ -86,7 +89,12 @@ def main():
     #
     # run
     #
-    fw =  Framework.Framework(quiet = args.quiet, process = args.process)
+    fw =  Framework.Framework(
+        quiet = args.quiet,
+        process = args.process,
+        max_events_per_dataset = args.nevents,
+        max_events_per_process = args.max_events_per_process
+    )
     fw.run(
         dataset = dataset,
         reader_collector_pairs = reader_collector_pairs
