@@ -56,7 +56,7 @@ def main():
         dict(keyAttrNames = ('pfMet', ), binnings = (Round(10, 0), )),
         dict(keyAttrNames = ('genParticle_pdgId', ), keyIndices = ('*', ), binnings = (echo, ), keyOutColumnNames = ('gen_pdg', )),
         dict(keyAttrNames = ('genParticle_eta', ), keyIndices = ('*', ), binnings = (Round(0.1, 0), ), keyOutColumnNames = ('gen_eta', )),
-        dict(keyAttrNames = ('genParticle_pdgId', 'genParticle_eta'), keyIndices = ('(*)', '\\0'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('gen_pdg', 'gen_eta')),
+        dict(keyAttrNames = ('genParticle_pdgId', 'genParticle_eta'), keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('gen_pdg', 'gen_eta')),
         dict(keyAttrNames = ('genParticle_phi', ), keyIndices = ('*', ), binnings = (Round(0.1, 0), ), keyOutColumnNames = ('gen_phi', )),
         dict(keyAttrNames = ('genParticle_energy', ), keyIndices = ('*', ), binnings = (Round(0.1, 0), ), keyOutColumnNames = ('gen_energy', )),
         dict(
