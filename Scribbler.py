@@ -47,6 +47,41 @@ class MET(object):
         self.handlePFMETs = None
 
 ##__________________________________________________________________||
+class GenParticle(object):
+    def begin(self, event):
+        self.nGenParticles = [ ]
+        self.genParticle_pdgId = [ ]
+        self.genParticle_eta = [ ]
+        self.genParticle_phi = [ ]
+        self.genParticle_energy = [ ]
+        self._attach_to_event(event)
+
+        self.handleGenParticles = Handle("std::vector<reco::GenParticle>")
+
+    def _attach_to_event(self, event):
+        event.nGenParticles = self.nGenParticles
+        event.genParticle_pdgId = self.genParticle_pdgId
+        event.genParticle_eta = self.genParticle_eta
+        event.genParticle_phi = self.genParticle_phi
+        event.genParticle_energy = self.genParticle_energy
+
+    def event(self, event):
+        self._attach_to_event(event)
+
+        edm_event = event.edm_event
+
+        edm_event.getByLabel("genParticles", self.handleGenParticles)
+        genparts = self.handleGenParticles.product()
+        self.nGenParticles[:] = [genparts.size()]
+        self.genParticle_pdgId[:] = [e.pdgId() for e in genparts]
+        self.genParticle_eta[:] = [e.eta() for e in genparts]
+        self.genParticle_phi[:] = [e.phi() for e in genparts]
+        self.genParticle_energy[:] = [e.energy() for e in genparts]
+
+    def end(self):
+        self.handleGenParticles = None
+
+##__________________________________________________________________||
 class HFPreRecHit(object):
     def begin(self, event):
         self.hfrechit_ieta = [ ]
