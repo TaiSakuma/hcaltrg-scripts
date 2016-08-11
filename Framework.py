@@ -43,7 +43,10 @@ class Dataset(object):
 ##__________________________________________________________________||
 class Events(object):
     def __init__(self, dataset):
+
         self._edmEvents = EDMEvents(dataset.files)
+        # https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/DataFormats/FWLite/python/__init__.py#L457
+
         self.iEvent = -1
         self.nEvents = self._edmEvents.size()
 
