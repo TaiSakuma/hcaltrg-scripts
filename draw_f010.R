@@ -39,7 +39,7 @@ arg.tbl.dir <- if(exists('arg.tbl.dir')) arg.tbl.dir else 'tbl_01'
 main <- function()
 {
 
-  tblFileName <- 'tbl_custom_hfprefechit_energy.txt'
+  tblFileName <- 'tbl_Sum_ieta_iphi_idxQIE10_energy.txt'
 
   tblPath <- file.path(arg.tbl.dir, tblFileName)
   if(!(file.exists(tblPath))) return()
