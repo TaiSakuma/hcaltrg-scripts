@@ -87,7 +87,12 @@ class HFPreRecHit(object):
         self.hfrechit_ieta = [ ]
         self.hfrechit_iphi = [ ]
         self.hfrechit_QIE10_index = [ ]
+        self.hfrechit_QIE10_charge = [ ]
         self.hfrechit_QIE10_energy = [ ]
+        self.hfrechit_QIE10_timeRising = [ ]
+        self.hfrechit_QIE10_timeFalling = [ ]
+        self.hfrechit_QIE10_nRaw = [ ]
+        self.hfrechit_QIE10_soi = [ ]
         self._attach_to_event(event)
 
         self.handleHFPreRecHit = Handle("edm::SortedCollection<HFPreRecHit,edm::StrictWeakOrdering<HFPreRecHit> >")
@@ -98,7 +103,12 @@ class HFPreRecHit(object):
         event.hfrechit_ieta = self.hfrechit_ieta
         event.hfrechit_iphi = self.hfrechit_iphi
         event.hfrechit_QIE10_index = self.hfrechit_QIE10_index
+        event.hfrechit_QIE10_charge = self.hfrechit_QIE10_charge
         event.hfrechit_QIE10_energy = self.hfrechit_QIE10_energy
+        event.hfrechit_QIE10_timeRising = self.hfrechit_QIE10_timeRising
+        event.hfrechit_QIE10_timeFalling = self.hfrechit_QIE10_timeFalling
+        event.hfrechit_QIE10_nRaw = self.hfrechit_QIE10_nRaw
+        event.hfrechit_QIE10_soi = self.hfrechit_QIE10_soi
 
     def event(self, event):
         self._attach_to_event(event)
@@ -111,7 +121,14 @@ class HFPreRecHit(object):
         self.hfrechit_ieta[:] = [h.id().ieta() for h in hfPreRecoHits]*2
         self.hfrechit_iphi[:] = [h.id().iphi() for h in hfPreRecoHits]*2
         self.hfrechit_QIE10_index[:] = [0]*len(hfPreRecoHits) + [1]*len(hfPreRecoHits)
-        self.hfrechit_QIE10_energy[:] = [h.getHFQIE10Info(i).energy() for i in (0, 1) for h in hfPreRecoHits] + [h.getHFQIE10Info(1).energy() for h in hfPreRecoHits]
+
+        HFQIE10Infos = [h.getHFQIE10Info(i) for i in (0, 1) for h in hfPreRecoHits]
+        self.hfrechit_QIE10_charge[:] = [i.charge() for i in HFQIE10Infos]
+        self.hfrechit_QIE10_energy[:] = [i.energy() for i in HFQIE10Infos]
+        self.hfrechit_QIE10_timeRising[:] = [i.timeRising() for i in HFQIE10Infos]
+        self.hfrechit_QIE10_timeFalling[:] = [i.timeFalling() for i in HFQIE10Infos]
+        self.hfrechit_QIE10_nRaw[:] = [i.nRaw() for i in HFQIE10Infos]
+        self.hfrechit_QIE10_soi[:] = [i.soi() for i in HFQIE10Infos]
 
     def end(self):
         self.handleHFPreRecHit = None
