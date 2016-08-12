@@ -83,7 +83,7 @@ main <- function()
   sub('QIE10_soi', xlim = c(0, 5), adjust = function(x) x - 0.5)
   sub('QIE10_timeRising', xlim = c(-130, 10))
   sub('QIE10_timeFalling', xlim = c(-130, 10))
-  # invisible()
+  invisible()
 }
 
 ##__________________________________________________________________||
