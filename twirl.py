@@ -37,6 +37,7 @@ def main():
         (Scribbler.MET(),            NullCollector()),
         (Scribbler.GenParticle(),    NullCollector()),
         (Scribbler.HFPreRecHit(),    NullCollector()),
+        (Scribbler.QIE10Ag(),        NullCollector()),
         # (Scribbler.Scratch(),        NullCollector()),
         ])
 
@@ -70,18 +71,20 @@ def main():
             valOutColumnNames = ('energy', ),
             summaryClass = AlphaTwirl.Summary.Sum,
         ),
-        dict(keyAttrNames = ('hfrechit_QIE10_charge', ), keyIndices = ('*', ), binnings = (Round(0.1, 0), ), keyOutColumnNames = ('QIE10_charge', )),
-        dict(keyAttrNames = ('hfrechit_QIE10_energy', ), keyIndices = ('*', ), binnings = (Round(0.1, 0), ), keyOutColumnNames = ('QIE10_energy', )),
-        dict(keyAttrNames = ('hfrechit_QIE10_timeRising', ), keyIndices = ('*', ), binnings = (Round(0.1, 0), ), keyOutColumnNames = ('QIE10_timeRising', )),
-        dict(keyAttrNames = ('hfrechit_QIE10_timeFalling', ), keyIndices = ('*', ), binnings = (Round(0.1, 0), ), keyOutColumnNames = ('QIE10_timeFalling', )),
-        dict(keyAttrNames = ('hfrechit_QIE10_nRaw', ), keyIndices = ('*', ), binnings = (Round(1, 0), ), keyOutColumnNames = ('QIE10_nRaw', )),
-        dict(keyAttrNames = ('hfrechit_QIE10_soi', ), keyIndices = ('*', ), binnings = (Round(1, 0), ), keyOutColumnNames = ('QIE10_soi', )),
+        dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_charge'),      keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_charge')),
+        dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_energy'),      keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_energy')),
+        dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_timeRising'),  keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_timeRising')),
+        dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_timeFalling'), keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_timeFalling')),
+        dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_nRaw'),        keyIndices = ('(*)', '\\1'), binnings = (echo, Round(1, 0)  ), keyOutColumnNames = ('idxQIE10', 'QIE10_nRaw')),
+        dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_soi'),         keyIndices = ('(*)', '\\1'), binnings = (echo, Round(1, 0)  ), keyOutColumnNames = ('idxQIE10', 'QIE10_soi')),
+        dict(keyAttrNames = ('QIE10Ag_energy_ratio', ), keyIndices = ('*', ), binnings = (Round(0.1, 0, valid = greater_than_zero), ), keyOutColumnNames = ('QIE10_energy_ratio', )),
     ]
 
     # complete table configs
     tableConfigCompleter = AlphaTwirl.Configure.TableConfigCompleter(
         defaultSummaryClass = AlphaTwirl.Summary.Count,
-        defaultOutDir = args.outdir
+        defaultOutDir = args.outdir,
+        createOutFileName = AlphaTwirl.Configure.TableFileNameComposer2()
     )
     tblcfg = [tableConfigCompleter.complete(c) for c in tblcfg]
 
@@ -111,6 +114,9 @@ def main():
         dataset = dataset,
         reader_collector_pairs = reader_collector_pairs
     )
+
+##__________________________________________________________________||
+def greater_than_zero(x): return x > 0
 
 ##__________________________________________________________________||
 if __name__ == '__main__':
