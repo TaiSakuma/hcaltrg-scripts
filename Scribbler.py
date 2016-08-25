@@ -1,4 +1,5 @@
 # Tai Sakuma <sakuma@cern.ch>
+import numpy as np
 
 ##__________________________________________________________________||
 class EventAuxiliary(object):
@@ -132,6 +133,36 @@ class HFPreRecHit(object):
 
     def end(self):
         self.handleHFPreRecHit = None
+
+##__________________________________________________________________||
+class QIE10Ag(object):
+    def begin(self, event, min_energy = 3):
+        self.min_energy = min_energy
+
+        self.QIE10Ag_ieta = [ ]
+        self.QIE10Ag_iphi = [ ]
+        self.QIE10Ag_energy_ratio = [ ]
+        self._attach_to_event(event)
+
+    def _attach_to_event(self, event):
+        event.QIE10Ag_ieta = self.QIE10Ag_ieta
+        event.QIE10Ag_iphi = self.QIE10Ag_iphi
+        event.QIE10Ag_energy_ratio = self.QIE10Ag_energy_ratio
+
+    def event(self, event):
+        self._attach_to_event(event)
+
+        len_hfrechit = len(event.hfrechit_QIE10_index)/2
+        energy0 = np.array(event.hfrechit_QIE10_energy[:len_hfrechit])
+        energy1 = np.array(event.hfrechit_QIE10_energy[len_hfrechit:])
+        above_threshold = np.minimum.reduce([energy0, energy1]) >= self.min_energy
+        ratio = np.where(above_threshold, energy0/energy1, 0)
+        self.QIE10Ag_ieta[:] = event.hfrechit_ieta[:len_hfrechit]
+        self.QIE10Ag_iphi[:] = event.hfrechit_iphi[:len_hfrechit]
+        self.QIE10Ag_energy_ratio[:] = ratio
+
+    def end(self):
+        pass
 
 ##__________________________________________________________________||
 class Scratch(object):
