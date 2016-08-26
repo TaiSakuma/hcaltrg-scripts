@@ -13,11 +13,11 @@ ROOT.gROOT.SetBatch(1)
 
 ##__________________________________________________________________||
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--input", help = "the path to the input file")
+parser.add_argument("--input-files", default = [ ], nargs = '*', help = "list of input files")
+parser.add_argument("--dataset-names", default = [ ], nargs = '*', help = "list of data set names")
 parser.add_argument("-p", "--process", default = 1, type = int, help = "number of processes to run in parallel")
 parser.add_argument('-o', '--outdir', default = os.path.join('tbl', 'out'))
 parser.add_argument('-q', '--quiet', action = 'store_true', default = False, help = 'quiet mode')
-
 parser.add_argument('-n', '--nevents', default = -1, type = int, help = 'maximum number of events to process for each component')
 parser.add_argument('--max-events-per-process', default = -1, type = int, help = 'maximum number of events per process')
 parser.add_argument('--force', action = 'store_true', default = False, help = 'recreate all output files')
@@ -37,6 +37,7 @@ def main():
         (Scribbler.MET(),            NullCollector()),
         (Scribbler.GenParticle(),    NullCollector()),
         (Scribbler.HFPreRecHit(),    NullCollector()),
+        (Scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 3),    NullCollector()),
         (Scribbler.QIE10Ag(),        NullCollector()),
         # (Scribbler.Scratch(),        NullCollector()),
         ])
@@ -73,6 +74,7 @@ def main():
         ),
         dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_charge'),      keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_charge')),
         dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_energy'),      keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_energy')),
+        dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_energy_th'),      keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0, valid = greater_than_zero)), keyOutColumnNames = ('idxQIE10', 'QIE10_energy_th')),
         dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_timeRising'),  keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_timeRising')),
         dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_timeFalling'), keyIndices = ('(*)', '\\1'), binnings = (echo, Round(0.1, 0)), keyOutColumnNames = ('idxQIE10', 'QIE10_timeFalling')),
         dict(keyAttrNames = ('hfrechit_QIE10_index', 'hfrechit_QIE10_nRaw'),        keyIndices = ('(*)', '\\1'), binnings = (echo, Round(1, 0)  ), keyOutColumnNames = ('idxQIE10', 'QIE10_nRaw')),
@@ -99,7 +101,8 @@ def main():
     #
     # configure data sets
     #
-    dataset = Framework.Dataset('root3', [args.input])
+    dataset_names = args.dataset_names if args.dataset_names else args.input_files
+    datasets = [Framework.Dataset(n, [f]) for n, f in zip(dataset_names, args.input_files)]
 
     #
     # run
@@ -111,7 +114,7 @@ def main():
         max_events_per_process = args.max_events_per_process
     )
     fw.run(
-        dataset = dataset,
+        datasets = datasets,
         reader_collector_pairs = reader_collector_pairs
     )
 
