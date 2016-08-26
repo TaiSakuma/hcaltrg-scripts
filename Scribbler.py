@@ -135,10 +135,24 @@ class HFPreRecHit(object):
         self.handleHFPreRecHit = None
 
 ##__________________________________________________________________||
-class QIE10Ag(object):
-    def begin(self, event, min_energy = 3):
+class HFPreRecHit_QIE10_energy_th(object):
+    def __init__(self, min_energy = 3):
         self.min_energy = min_energy
 
+    def begin(self, event):
+        self.hfrechit_QIE10_energy_th = [ ]
+        self._attach_to_event(event)
+
+    def _attach_to_event(self, event):
+        event.hfrechit_QIE10_energy_th = self.hfrechit_QIE10_energy_th
+
+    def event(self, event):
+        self._attach_to_event(event)
+        self.hfrechit_QIE10_energy_th[:] = [(e if e >= self.min_energy else 0) for e in event.hfrechit_QIE10_energy]
+
+##__________________________________________________________________||
+class QIE10Ag(object):
+    def begin(self, event):
         self.QIE10Ag_ieta = [ ]
         self.QIE10Ag_iphi = [ ]
         self.QIE10Ag_energy_ratio = [ ]
@@ -153,10 +167,9 @@ class QIE10Ag(object):
         self._attach_to_event(event)
 
         len_hfrechit = len(event.hfrechit_QIE10_index)/2
-        energy0 = np.array(event.hfrechit_QIE10_energy[:len_hfrechit])
-        energy1 = np.array(event.hfrechit_QIE10_energy[len_hfrechit:])
-        above_threshold = np.minimum.reduce([energy0, energy1]) >= self.min_energy
-        ratio = np.where(above_threshold, energy0/energy1, 0)
+        energy0 = np.array(event.hfrechit_QIE10_energy_th[:len_hfrechit])
+        energy1 = np.array(event.hfrechit_QIE10_energy_th[len_hfrechit:])
+        ratio = np.where(energy1 > 0, energy0/energy1, 0)
         self.QIE10Ag_ieta[:] = event.hfrechit_ieta[:len_hfrechit]
         self.QIE10Ag_iphi[:] = event.hfrechit_iphi[:len_hfrechit]
         self.QIE10Ag_energy_ratio[:] = ratio
