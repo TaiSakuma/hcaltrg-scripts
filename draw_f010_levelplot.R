@@ -39,22 +39,30 @@ arg.tbl.dir <- if(exists('arg.tbl.dir')) arg.tbl.dir else 'tbl_01'
 main <- function()
 {
 
-  tblFileName <- 'tbl_Sum_ieta_iphi_idxQIE10_energy.txt'
+  tblFileName <- 'tbl_Scan.run.lumi.evt.ieta-wp.iphi-b1.idxQIE10-b1.energy-b1.energy_th-b1.txt'
 
   tblPath <- file.path(arg.tbl.dir, tblFileName)
   if(!(file.exists(tblPath))) return()
 
   fig.id <- mk.fig.id()
 
-  figFileNameNoSuf <- paste(fig.id, 'levelplot_energy', sep = '_')
+  components = c('e', 'pi')
+
+  figFileNameNoSuf <- paste(fig.id, 'levelplot_energy', components, sep = '_')
   suffixes <- c('.pdf', '.png')
   figFileName <- outer(figFileNameNoSuf, suffixes, paste, sep = '')
   figPaths <- file.path(arg.outdir, figFileName)
-   
+
   if( (!arg.force) && all_outputs_are_newer_than_any_input(figPaths, tblPath)) return()
   dir.create(arg.outdir, recursive = TRUE, showWarnings = FALSE)
 
   tbl <- read.table(tblPath, header = TRUE)
+
+  tbl$energy <- tbl$energy_th
+
+  evt <- sort(unique(tbl$evt))[2:4]
+  tbl <- tbl[tbl$evt %in% evt, ]
+  tbl$evt <- factor(tbl$evt)
 
   tbl28 <- tbl[abs(tbl$ieta) == 29, ]
   tbl28$ieta[tbl28$ieta == 29] <- 28
@@ -70,15 +78,14 @@ main <- function()
   zmax <- ceiling(max(tbl$energy, na.rm = TRUE))
   zmin <- floor(min(tbl$energy, na.rm = TRUE))
 
-  z.at <- zmin:zmax
+  print(zmax)
+
+  z.at <- seq(from = zmin, to = zmax, length.out = 50)
   print(z.at)
-  print(length(0:zmax))
-  print(0:zmax)
-  print(length(zmin:0))
-  print(zmin:0)
-  print(length(z.at))
-  col1 <- rev(colorRampPalette(brewer.pal(9, "Blues"))(-zmin))
-  col2 <- colorRampPalette(brewer.pal(9, "Reds"))(zmax)
+  len_negative <- length(z.at[z.at < 0])
+  len_positive <- length(z.at[z.at >= 0])
+  col1 <- rev(colorRampPalette(brewer.pal(9, "Blues"))(len_negative))
+  col2 <- colorRampPalette(brewer.pal(9, "Reds"))(len_positive)
   print(col1)
   print(col2)
   col.regions <- c(col1, col2)
@@ -87,10 +94,17 @@ main <- function()
     list(regions = list(col = col.regions))
   )
 
-  p <- draw_figure(tbl, z.at = z.at)
-  ## p <- useOuterStrips(p)
+
+  for(component in components)
+    {
+      tbl_<- tbl[tbl$component == component, ]
+
+      p <- draw_figure(tbl_, z.at = z.at)
+      p <- useOuterStrips(p)
    
-  print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 6, height = 5)
+      figFileNameNoSuf <- paste(fig.id, 'levelplot_energy', component, sep = '_')
+      print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 8, height = 5)
+    }
 
   invisible()
 }
@@ -99,10 +113,10 @@ main <- function()
 draw_figure <- function(tbl, z.at)
 {
   levelplot(
-    energy ~ ieta*iphi | idxQIE10,
+    energy ~ ieta*iphi | idxQIE10*evt,
     data = tbl,
     aspect = 3/8,
-    between = list(y = 0.5),
+    between = list(x = 0.2, y = 0.5),
     ## pretty = TRUE,
     at = z.at,
     scales = list(
