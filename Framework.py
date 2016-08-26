@@ -15,7 +15,7 @@ class Framework(object):
         self.max_events_per_dataset = max_events_per_dataset
         self.max_events_per_process = max_events_per_process
 
-    def run(self, dataset, reader_collector_pairs):
+    def run(self, datasets, reader_collector_pairs):
         self._begin()
         reader_top = AlphaTwirl.Loop.ReaderComposite()
         collector_top = AlphaTwirl.Loop.CollectorComposite(self.progressMonitor.createReporter())
@@ -32,7 +32,8 @@ class Framework(object):
             maxEventsPerRun = self.max_events_per_process
         )
         eventReader.begin()
-        eventReader.read(dataset)
+        for dataset in datasets:
+            eventReader.read(dataset)
         eventReader.end()
         self._end()
 
