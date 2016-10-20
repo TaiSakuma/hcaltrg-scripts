@@ -46,7 +46,8 @@ main <- function()
 
   fig.id <- mk.fig.id()
 
-  components = c('e', 'pi')
+  ## components = c('e', 'pi')
+  components = c('pi')
 
   figFileNameNoSuf <- paste(fig.id, 'levelplot_energy', components, sep = '_')
   suffixes <- c('.pdf', '.png')

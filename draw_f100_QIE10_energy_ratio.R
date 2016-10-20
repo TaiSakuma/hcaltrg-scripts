@@ -10,6 +10,9 @@ source('all_outputs_are_newer_than_any_input.R')
 setwd(olddir)
 
 ##__________________________________________________________________||
+scriptdir = dirname(substring(argv[grep("--file=", argv)], 8))
+
+##__________________________________________________________________||
 eval(readArgs)
 
 ##__________________________________________________________________||
@@ -45,6 +48,9 @@ main <- function()
     tblPath <- file.path(arg.tbl.dir, tblFileName)
     if(!(file.exists(tblPath))) return()
 
+    tblCompPath <- file.path(scriptdir, 'tbl', 'tbl_component_src_particle_energy.txt')
+    if(!(file.exists(tblCompPath))) return()
+
     fig.id <- mk.fig.id()
 
     figFileNameNoSuf <- paste(fig.id, varname, sep = '_')
@@ -52,7 +58,13 @@ main <- function()
     figFileName <- outer(figFileNameNoSuf, suffixes, paste, sep = '')
     figPaths <- file.path(arg.outdir, figFileName)
     
-    if( (!arg.force) && all_outputs_are_newer_than_any_input(figPaths, tblPath)) return()
+    if(!arg.force)
+    {
+      outfile_paths <- figPaths
+      infile_paths <- c(tblPath, tblCompPath)
+      if(all_outputs_are_newer_than_any_input(outfile_paths, infile_paths)) return()
+    }
+
     dir.create(arg.outdir, recursive = TRUE, showWarnings = FALSE)
 
     tbl <- read.table(tblPath, header = TRUE)
@@ -66,24 +78,25 @@ main <- function()
     tbl_$nvar <- 0
     tbl <- rbind(tbl_, tbl)
 
+    ## add particle type and energy of the gun
+    tbl_comp <- read.table(tblCompPath, header = TRUE)
+    tbl <- merge(tbl, tbl_comp)
+    tbl$src_energy <- factor(tbl$src_energy)
+
+    tbl <- tbl[tbl$src_energy %in% c(50, 100, 150), ]
+
+    ## sort
+    tbl <- tbl %>% arrange(component, val, n)
+
     theme <- theme.this()
 
     p <- draw_figure(tbl, varname, xlim)
-    ## p <- useOuterStrips(p)
+    p <- useOuterStrips(p)
     
-    print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 3.5, height = 4.5)
+    print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 8, height = 4.5)
   }
 
   sub('QIE10_energy_ratio')
-  ## sub('gen_energy', xlim = c(0, 60))
-  ## sub('gen_pdg')
-  ## sub('gen_phi')
-  ## sub('QIE10_charge')
-  ## sub('QIE10_energy')
-  ## sub('QIE10_nRaw', xlim = c(2, 8), adjust = function(x) x - 0.5)
-  ## sub('QIE10_soi', xlim = c(0, 5), adjust = function(x) x - 0.5)
-  ## sub('QIE10_timeRising', xlim = c(-130, 10))
-  ## sub('QIE10_timeFalling', xlim = c(-130, 10))
   invisible()
 }
 
@@ -110,7 +123,7 @@ draw_figure <- function(tbl, varname, xlim = NULL)
 
   golden_ratio <- 1.61803398875
   ##________________________________________________________________||
-  xyplot(n ~ val | component,
+  xyplot(n ~ val | src_energy*src_particle,
          data = tbl,
          xlab = varname,
          aspect = 1/golden_ratio,

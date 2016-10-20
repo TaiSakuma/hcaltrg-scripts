@@ -10,6 +10,9 @@ source('all_outputs_are_newer_than_any_input.R')
 setwd(olddir)
 
 ##__________________________________________________________________||
+scriptdir = dirname(substring(argv[grep("--file=", argv)], 8))
+
+##__________________________________________________________________||
 eval(readArgs)
 
 ##__________________________________________________________________||
@@ -45,14 +48,25 @@ main <- function()
     tblPath <- file.path(arg.tbl.dir, tblFileName)
     if(!(file.exists(tblPath))) return()
 
+    tblCompPath <- file.path(scriptdir, 'tbl', 'tbl_component_src_particle_energy.txt')
+    if(!(file.exists(tblCompPath))) return()
+
     fig.id <- mk.fig.id()
 
-    figFileNameNoSuf <- paste(fig.id, varname, sep = '_')
+    src_particles <- c('e', 'pi')
+
+    figFileNameNoSuf <- paste(fig.id, varname, src_particles, sep = '_')
     suffixes <- c('.pdf', '.png')
     figFileName <- outer(figFileNameNoSuf, suffixes, paste, sep = '')
     figPaths <- file.path(arg.outdir, figFileName)
     
-    if( (!arg.force) && all_outputs_are_newer_than_any_input(figPaths, tblPath)) return()
+    if(!arg.force)
+    {
+      outfile_paths <- figPaths
+      infile_paths <- c(tblPath, tblCompPath)
+      if(all_outputs_are_newer_than_any_input(outfile_paths, infile_paths)) return()
+    }
+
     dir.create(arg.outdir, recursive = TRUE, showWarnings = FALSE)
 
     tbl <- read.table(tblPath, header = TRUE)
@@ -67,12 +81,28 @@ main <- function()
     tbl_$nvar <- 0
     tbl <- rbind(tbl_, tbl)
 
+    ## add particle type and energy of the gun
+    tbl_comp <- read.table(tblCompPath, header = TRUE)
+    tbl <- merge(tbl, tbl_comp)
+    tbl$src_energy <- factor(tbl$src_energy)
+
+    tbl <- tbl[tbl$src_energy %in% c(50, 100, 150), ]
+
+    ## sort
+    tbl <- tbl %>% arrange(component, idxQIE10, val, n)
+
     theme <- theme.this()
 
-    p <- draw_figure(tbl, varname, xlim)
-    p <- useOuterStrips(p)
-    
-    print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 5, height = 3.5)
+    for(src_particle in src_particles)
+    {
+      tbl_ <- tbl[tbl$src_particle == src_particle, ]
+
+      p <- draw_figure(tbl_, varname, xlim)
+      p <- useOuterStrips(p)
+
+      figFileNameNoSuf <- paste(fig.id, varname, src_particle, sep = '_')
+      print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 6, height = 3.4)
+    }
   }
 
   sub('QIE10_charge')
@@ -108,7 +138,7 @@ draw_figure <- function(tbl, varname, xlim = NULL)
 
   golden_ratio <- 1.61803398875
   ##________________________________________________________________||
-  xyplot(n ~ val | component*idxQIE10,
+  xyplot(n ~ val | src_energy*idxQIE10,
          data = tbl,
          xlab = varname,
          aspect = 1/golden_ratio,
