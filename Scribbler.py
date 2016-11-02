@@ -87,6 +87,7 @@ class HFPreRecHit(object):
     def begin(self, event):
         self.hfrechit_ieta = [ ]
         self.hfrechit_iphi = [ ]
+        self.hfrechit_depth = [ ]
         self.hfrechit_QIE10_index = [ ]
         self.hfrechit_QIE10_charge = [ ]
         self.hfrechit_QIE10_energy = [ ]
@@ -103,6 +104,7 @@ class HFPreRecHit(object):
     def _attach_to_event(self, event):
         event.hfrechit_ieta = self.hfrechit_ieta
         event.hfrechit_iphi = self.hfrechit_iphi
+        event.hfrechit_depth = self.hfrechit_depth
         event.hfrechit_QIE10_index = self.hfrechit_QIE10_index
         event.hfrechit_QIE10_charge = self.hfrechit_QIE10_charge
         event.hfrechit_QIE10_energy = self.hfrechit_QIE10_energy
@@ -121,6 +123,7 @@ class HFPreRecHit(object):
 
         self.hfrechit_ieta[:] = [h.id().ieta() for h in hfPreRecoHits]*2
         self.hfrechit_iphi[:] = [h.id().iphi() for h in hfPreRecoHits]*2
+        self.hfrechit_depth[:] = [h.id().depth() for h in hfPreRecoHits]*2
         self.hfrechit_QIE10_index[:] = [0]*len(hfPreRecoHits) + [1]*len(hfPreRecoHits)
 
         HFQIE10Infos = [h.getHFQIE10Info(i) for i in (0, 1) for h in hfPreRecoHits]
