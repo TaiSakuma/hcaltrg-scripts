@@ -37,8 +37,9 @@ def main():
         (Scribbler.MET(),            NullCollector()),
         (Scribbler.GenParticle(),    NullCollector()),
         (Scribbler.HFPreRecHit(),    NullCollector()),
-        (Scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 3),    NullCollector()),
-        (Scribbler.QIE10Ag(),        NullCollector()),
+        (Scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 5),    NullCollector()),
+        (Scribbler.QIE10MergedDepth(), NullCollector()),
+        # (Scribbler.QIE10Ag(),        NullCollector()),
         # (Scribbler.Scratch(),        NullCollector()),
         ])
 
