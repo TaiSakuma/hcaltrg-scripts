@@ -1,4 +1,5 @@
 # Tai Sakuma <sakuma@cern.ch>
+import pandas as pd
 import numpy as np
 
 ##__________________________________________________________________||
@@ -152,6 +153,54 @@ class HFPreRecHit_QIE10_energy_th(object):
     def event(self, event):
         self._attach_to_event(event)
         self.hfrechit_QIE10_energy_th[:] = [(e if e >= self.min_energy else 0) for e in event.hfrechit_QIE10_energy]
+
+##__________________________________________________________________||
+class QIE10MergedDepth(object):
+    def begin(self, event):
+        self.QIE10MergedDepth_ieta = [ ]
+        self.QIE10MergedDepth_iphi = [ ]
+        self.QIE10MergedDepth_index = [ ]
+        self.QIE10MergedDepth_energy_depth1 = [ ]
+        self.QIE10MergedDepth_energy_depth2 = [ ]
+        self.QIE10MergedDepth_energy_ratio = [ ]
+        self._attach_to_event(event)
+
+    def _attach_to_event(self, event):
+        event.QIE10MergedDepth_ieta = self.QIE10MergedDepth_ieta
+        event.QIE10MergedDepth_iphi = self.QIE10MergedDepth_iphi
+        event.QIE10MergedDepth_index = self.QIE10MergedDepth_index
+        event.QIE10MergedDepth_energy_depth1 = self.QIE10MergedDepth_energy_depth1
+        event.QIE10MergedDepth_energy_depth2 = self.QIE10MergedDepth_energy_depth2
+        event.QIE10MergedDepth_energy_ratio = self.QIE10MergedDepth_energy_ratio
+
+    def event(self, event):
+        self._attach_to_event(event)
+
+        df = pd.DataFrame({
+            'ieta': event.hfrechit_ieta,
+            'iphi': event.hfrechit_iphi,
+            'index': event.hfrechit_QIE10_index,
+            'depth': event.hfrechit_depth,
+            'energy': event.hfrechit_QIE10_energy_th
+        })
+
+        df = pd.pivot_table(
+            df,
+            values = ['energy'],
+            index = ['ieta', 'iphi', 'index'],
+            columns = ['depth']).reset_index()
+        df.columns = ['_'.join(['{}'.format(f) for f in e]).strip('_') for e in df]
+        df['energy_ratio'] = np.where(df.energy_2 > 0, df.energy_1/df.energy_2, 0)
+
+        self.QIE10MergedDepth_ieta[:] = df.ieta
+        self.QIE10MergedDepth_iphi[:] = df.iphi
+        self.QIE10MergedDepth_index[:] = df.index
+        self.QIE10MergedDepth_energy_depth1[:] = df.energy_1
+        self.QIE10MergedDepth_energy_depth2[:] =  df.energy_2
+        self.QIE10MergedDepth_energy_ratio[:] = df.energy_ratio
+
+    def end(self):
+        pass
 
 ##__________________________________________________________________||
 class QIE10Ag(object):
