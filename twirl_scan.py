@@ -67,17 +67,17 @@ def main():
         dict(
             keyAttrNames = (
                 'run', 'lumi', 'eventId',
-                'hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_QIE10_index'
+                'hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_depth', 'hfrechit_QIE10_index'
             ),
             keyIndices = (
                 None, None, None,
-                '(*)', '\\1', '\\1'
+                '(*)', '\\1', '\\1', '\\1'
             ),
             valAttrNames = ('hfrechit_QIE10_energy', 'hfrechit_QIE10_energy_th'),
             valIndices = ('\\1', '\\1'),
             keyOutColumnNames = (
                 'run', 'lumi', 'evt',
-                'ieta', 'iphi', 'idxQIE10'
+                'ieta', 'iphi', 'depth', 'idxQIE10'
             ),
             valOutColumnNames = ('energy', 'energy_th'),
             summaryClass = AlphaTwirl.Summary.Scan,
