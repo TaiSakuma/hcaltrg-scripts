@@ -155,6 +155,19 @@ class HFPreRecHit_QIE10_energy_th(object):
 
 ##__________________________________________________________________||
 class QIE10Ag(object):
+    """This class is outdated, but might become useful for slightly
+    different purpose.
+
+    This class was originally made to take the energy ratio of the
+    long and short fibers. However, the implementation is wrong. This
+    class takes the ratio of energies for different QIE10 indices.
+
+    It turns out that different indices are not for long and short
+    fibers. They are probably for two readouts on the same QIE10. If
+    this is the case, this class can be reused to take an energy
+    average of two readouts.
+
+    """
     def begin(self, event):
         self.QIE10Ag_ieta = [ ]
         self.QIE10Ag_iphi = [ ]
