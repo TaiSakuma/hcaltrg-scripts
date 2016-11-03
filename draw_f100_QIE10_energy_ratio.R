@@ -23,16 +23,15 @@ library(dplyr, warn.conflicts = FALSE, quietly = TRUE)
 theme.this <- function()
   {
     cols <- c("darkgreen", "orange", "#ff00ff", "#ff0000", "#0080ff", "#00ff00", "brown")
-    col.regions <- colorRampPalette(brewer.pal(9, "Blues"))(100)
     theme <- list(
       add.text = list(cex = 0.8, lineheight = 2.0), # text in strip
       axis.text = list(cex = 0.8),
       axis.line = list(lwd = 0.2, col = 'gray30'),
       reference.line = list(col = '#eeeeee', lwd = 0.2),
-      regions = list(col = col.regions),
+      superpose.line = list(lwd = 1.0, alpha = 1.0),
       background = list(col = "transparent")
     )
-    modifyList(theme.economist(), theme)
+    modifyList(theme.set1(), theme)
   }
 
 ##__________________________________________________________________||
@@ -57,7 +56,7 @@ main <- function()
     suffixes <- c('.pdf', '.png')
     figFileName <- outer(figFileNameNoSuf, suffixes, paste, sep = '')
     figPaths <- file.path(arg.outdir, figFileName)
-    
+
     if(!arg.force)
     {
       outfile_paths <- figPaths
@@ -83,7 +82,7 @@ main <- function()
     tbl <- merge(tbl, tbl_comp)
     tbl$src_energy <- factor(tbl$src_energy)
 
-    tbl <- tbl[tbl$src_energy %in% c(50, 100, 150), ]
+    ## tbl <- tbl[tbl$src_energy %in% c(30, 50, 100, 150, 300), ]
 
     ## sort
     tbl <- tbl %>% arrange(component, val, n)
@@ -91,12 +90,12 @@ main <- function()
     theme <- theme.this()
 
     p <- draw_figure(tbl, varname, xlim)
-    p <- useOuterStrips(p)
-    
-    print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 8, height = 4.5)
+    ## p <- useOuterStrips(p)
+
+    print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 5, height = 4.5)
   }
 
-  sub('QIE10_energy_ratio')
+  sub('QIE10_energy_ratio', xlim = c(0, 15))
   invisible()
 }
 
@@ -123,12 +122,14 @@ draw_figure <- function(tbl, varname, xlim = NULL)
 
   golden_ratio <- 1.61803398875
   ##________________________________________________________________||
-  xyplot(n ~ val | src_energy*src_particle,
+  xyplot(n ~ val | src_energy,
+         groups = src_particle,
          data = tbl,
          xlab = varname,
          aspect = 1/golden_ratio,
          prepanel = prepanel,
          between = list(x = 0.2, y = 0.2),
+         auto.key = list(columns = 2, lines = TRUE, points = FALSE),
          scales = list(
            x = list(alternating = '1'),
            y = list(alternating = '1')

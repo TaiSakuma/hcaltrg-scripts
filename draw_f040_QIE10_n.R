@@ -43,7 +43,7 @@ main <- function()
 {
   sub <- function(varname, xlim = NULL, adjust = NULL)
   {
-    tblFileName <- paste('tbl_n_component.', 'idxQIE10-wp.', varname, '-b1', '.txt', sep = '')
+    tblFileName <- paste('tbl_n_component.', 'depth-wp.idxQIE10-b1.', varname, '-b1', '.txt', sep = '')
 
     tblPath <- file.path(arg.tbl.dir, tblFileName)
     if(!(file.exists(tblPath))) return()
@@ -59,7 +59,7 @@ main <- function()
     suffixes <- c('.pdf', '.png')
     figFileName <- outer(figFileNameNoSuf, suffixes, paste, sep = '')
     figPaths <- file.path(arg.outdir, figFileName)
-    
+
     if(!arg.force)
     {
       outfile_paths <- figPaths
@@ -71,22 +71,25 @@ main <- function()
 
     tbl <- read.table(tblPath, header = TRUE)
     colnames(tbl)[colnames(tbl) == varname] <- 'val'
-    tbl$idxQIE10 <- factor(tbl$idxQIE10, levels = c(0, 1), labels = c('QIE10 idx 0', 'QIE10 idx 1'))
+    ## tbl$idxQIE10 <- factor(tbl$idxQIE10, levels = c(0, 1), labels = c('QIE10 idx 0', 'QIE10 idx 1'))
 
     if(!is.null(adjust)) tbl$val <- adjust(tbl$val)
 
     ## to draw right side vertical line for the first entry
-    tbl_ <- tbl %>% group_by(component, idxQIE10) %>% summarise(val = min(val))
+    tbl_ <- tbl %>% group_by(component, depth, idxQIE10) %>% summarise(val = min(val))
     tbl_$n <- 0
     tbl_$nvar <- 0
     tbl <- rbind(tbl_, tbl)
+
+    tbl$depth_idx <- paste('depth = ', as.character(tbl$depth), ', idx = ', as.character(tbl$idxQIE10), sep ='')
+    tbl$depth_idx <- factor(tbl$depth_idx)
 
     ## add particle type and energy of the gun
     tbl_comp <- read.table(tblCompPath, header = TRUE)
     tbl <- merge(tbl, tbl_comp)
     tbl$src_energy <- factor(tbl$src_energy)
 
-    tbl <- tbl[tbl$src_energy %in% c(50, 100, 150), ]
+    tbl <- tbl[tbl$src_energy %in% c(30,50, 100, 150, 300), ]
 
     ## sort
     tbl <- tbl %>% arrange(component, idxQIE10, val, n)
@@ -101,7 +104,7 @@ main <- function()
       p <- useOuterStrips(p)
 
       figFileNameNoSuf <- paste(fig.id, varname, src_particle, sep = '_')
-      print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 6, height = 3.4)
+      print.figure(p, fig.id = figFileNameNoSuf, theme = theme, width = 6, height = 5)
     }
   }
 
@@ -138,7 +141,7 @@ draw_figure <- function(tbl, varname, xlim = NULL)
 
   golden_ratio <- 1.61803398875
   ##________________________________________________________________||
-  xyplot(n ~ val | src_energy*idxQIE10,
+  xyplot(n ~ val | depth_idx*src_energy,
          data = tbl,
          xlab = varname,
          aspect = 1/golden_ratio,
