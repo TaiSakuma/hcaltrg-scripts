@@ -38,6 +38,7 @@ def main():
         (Scribbler.GenParticle(),    NullCollector()),
         (Scribbler.HFPreRecHit(),    NullCollector()),
         (Scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 3),    NullCollector()),
+        (Scribbler.HFPreRecHitEtaPhi(), NullCollector()),
         (Scribbler.QIE10MergedDepth(), NullCollector()),
         # (Scribbler.QIE10Ag(),        NullCollector()),
         # (Scribbler.Scratch(),        NullCollector()),
@@ -68,19 +69,47 @@ def main():
         dict(
             keyAttrNames = (
                 'run', 'lumi', 'eventId',
-                'hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_depth', 'hfrechit_QIE10_index'
+                'hfrechit_ieta', 'hfrechit_iphi', 'hfrechit_depth', 'hfrechit_QIE10_index',
+                'hfrechit_eta', 'hfrechit_phi'
             ),
             keyIndices = (
                 None, None, None,
-                '(*)', '\\1', '\\1', '\\1'
+                '(*)', '\\1', '\\1', '\\1',
+                '\\1', '\\1'
             ),
             valAttrNames = ('hfrechit_QIE10_energy', 'hfrechit_QIE10_energy_th'),
             valIndices = ('\\1', '\\1'),
             keyOutColumnNames = (
                 'run', 'lumi', 'evt',
-                'ieta', 'iphi', 'depth', 'idxQIE10'
+                'ieta', 'iphi', 'depth', 'idxQIE10',
+                'eta', 'phi'
             ),
             valOutColumnNames = ('energy', 'energy_th'),
+            summaryClass = AlphaTwirl.Summary.Scan,
+        ),
+        dict(
+            keyAttrNames = (
+                'run', 'lumi', 'eventId',
+                'QIE10MergedDepth_ieta', 'QIE10MergedDepth_iphi', 'QIE10MergedDepth_index',
+            ),
+            keyIndices = (
+                None, None, None, '(*)', '\\1', '\\1'
+            ),
+            valAttrNames = (
+                'QIE10MergedDepth_eta_depth1', 'QIE10MergedDepth_phi_depth1', 'QIE10MergedDepth_energy_depth1',
+                'QIE10MergedDepth_eta_depth2', 'QIE10MergedDepth_phi_depth2', 'QIE10MergedDepth_energy_depth2',
+                'QIE10MergedDepth_energy_ratio'
+            ),
+            valIndices = ('\\1', '\\1', '\\1', '\\1', '\\1', '\\1', '\\1'),
+            keyOutColumnNames = (
+                'run', 'lumi', 'evt',
+                'ieta', 'iphi', 'idxQIE10',
+            ),
+            valOutColumnNames = (
+                'eta_depth1', 'phi_depth1', 'energy_depth1',
+                'eta_depth2', 'phi_depth2', 'energy_depth2',
+                'energy_ratio',
+            ),
             summaryClass = AlphaTwirl.Summary.Scan,
         ),
     ]
