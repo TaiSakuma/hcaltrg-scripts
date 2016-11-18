@@ -198,6 +198,10 @@ class QIE10MergedDepth(object):
         self.QIE10MergedDepth_energy_depth1 = [ ]
         self.QIE10MergedDepth_energy_depth2 = [ ]
         self.QIE10MergedDepth_energy_ratio = [ ]
+        self.QIE10MergedDepth_eta_depth1 = [ ]
+        self.QIE10MergedDepth_eta_depth2 = [ ]
+        self.QIE10MergedDepth_phi_depth1 = [ ]
+        self.QIE10MergedDepth_phi_depth2 = [ ]
         self._attach_to_event(event)
 
     def _attach_to_event(self, event):
@@ -207,6 +211,10 @@ class QIE10MergedDepth(object):
         event.QIE10MergedDepth_energy_depth1 = self.QIE10MergedDepth_energy_depth1
         event.QIE10MergedDepth_energy_depth2 = self.QIE10MergedDepth_energy_depth2
         event.QIE10MergedDepth_energy_ratio = self.QIE10MergedDepth_energy_ratio
+        event.QIE10MergedDepth_eta_depth1 = self.QIE10MergedDepth_eta_depth1
+        event.QIE10MergedDepth_eta_depth2 = self.QIE10MergedDepth_eta_depth2
+        event.QIE10MergedDepth_phi_depth1 = self.QIE10MergedDepth_phi_depth1
+        event.QIE10MergedDepth_phi_depth2 = self.QIE10MergedDepth_phi_depth2
 
     def event(self, event):
         self._attach_to_event(event)
@@ -216,12 +224,14 @@ class QIE10MergedDepth(object):
             'iphi': event.hfrechit_iphi,
             'index': event.hfrechit_QIE10_index,
             'depth': event.hfrechit_depth,
-            'energy': event.hfrechit_QIE10_energy_th
+            'energy': event.hfrechit_QIE10_energy_th,
+            'eta': event.hfrechit_eta,
+            'phi': event.hfrechit_phi
         })
 
         df = pd.pivot_table(
             df,
-            values = ['energy'],
+            values = ['energy', 'eta', 'phi'],
             index = ['ieta', 'iphi', 'index'],
             columns = ['depth']).reset_index()
         df.columns = ['_'.join(['{}'.format(f) for f in e]).strip('_') for e in df]
@@ -233,6 +243,10 @@ class QIE10MergedDepth(object):
         self.QIE10MergedDepth_energy_depth1[:] = df.energy_1
         self.QIE10MergedDepth_energy_depth2[:] =  df.energy_2
         self.QIE10MergedDepth_energy_ratio[:] = df.energy_ratio
+        self.QIE10MergedDepth_eta_depth1[:] = df.eta_1
+        self.QIE10MergedDepth_eta_depth2[:] = df.eta_2
+        self.QIE10MergedDepth_phi_depth1[:] = df.phi_1
+        self.QIE10MergedDepth_phi_depth2[:] = df.phi_2
 
     def end(self):
         pass
