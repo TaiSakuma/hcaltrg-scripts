@@ -1,4 +1,5 @@
 # Tai Sakuma <sakuma@cern.ch>
+import os
 import pandas as pd
 import numpy as np
 
@@ -137,6 +138,40 @@ class HFPreRecHit(object):
 
     def end(self):
         self.handleHFPreRecHit = None
+
+##__________________________________________________________________||
+class HFPreRecHitEtaPhi(object):
+    def begin(self, event):
+        self.hfrechit_eta = [ ]
+        self.hfrechit_phi = [ ]
+        self._attach_to_event(event)
+
+        this_dir = os.path.realpath(os.path.dirname(__file__))
+        tbl_dir = os.path.join(this_dir, 'tbl')
+        tbl_path = os.path.join(tbl_dir, 'tbl_HF_ieta_iphi_eta_phi.txt')
+        self.tbl_eta_phi = pd.read_table(tbl_path, delim_whitespace = True)
+
+    def _attach_to_event(self, event):
+        event.hfrechit_eta = self.hfrechit_eta
+        event.hfrechit_phi = self.hfrechit_phi
+
+    def event(self, event):
+        self._attach_to_event(event)
+
+        df = pd.DataFrame({
+            'ieta': event.hfrechit_ieta,
+            'iphi': event.hfrechit_iphi,
+            'hfdepth': event.hfrechit_depth,
+        })
+
+        # merge while preserving the order
+        # http://stackoverflow.com/questions/20206615/how-can-a-pandas-merge-preserve-order
+        res = df.merge(self.tbl_eta_phi, how = 'left')
+        # this should preserve the order. at least the following prints True
+        # print np.all(res[['ieta', 'iphi', 'hfdepth']] == df[['ieta', 'iphi', 'hfdepth']])
+
+        self.hfrechit_eta[:] = res.eta
+        self.hfrechit_phi[:] = res.phi
 
 ##__________________________________________________________________||
 class HFPreRecHit_QIE10_energy_th(object):
