@@ -40,6 +40,7 @@ def main():
         (Scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 3),    NullCollector()),
         (Scribbler.HFPreRecHitEtaPhi(), NullCollector()),
         (Scribbler.QIE10MergedDepth(), NullCollector()),
+        (Scribbler.GenMatching(), NullCollector()),
         # (Scribbler.QIE10Ag(),        NullCollector()),
         # (Scribbler.Scratch(),        NullCollector()),
         ])
@@ -63,6 +64,10 @@ def main():
             keyOutColumnNames = (
                 'run', 'lumi', 'evt',
                 'gen_pdgId', 'gen_eta', 'gen_phi', 'gen_energy',
+            ),
+            keyIndices = (
+                None, None, None,
+                '(*)', '\\1', '\\1', '\\1',
             ),
             summaryClass = AlphaTwirl.Summary.Scan,
         ),
@@ -109,6 +114,24 @@ def main():
                 'eta_depth1', 'phi_depth1', 'energy_depth1',
                 'eta_depth2', 'phi_depth2', 'energy_depth2',
                 'energy_ratio',
+            ),
+            summaryClass = AlphaTwirl.Summary.Scan,
+        ),
+        dict(
+            keyAttrNames = (
+                'run', 'lumi', 'eventId',
+                'GenMatchedSummed_gen_index', 'GenMatchedSummed_qie_index',
+                'GenMatchedSummed_energy_depth1', 'GenMatchedSummed_energy_depth2',
+                'GenMatchedSummed_energy_ratio'
+            ),
+            keyOutColumnNames = (
+                'run', 'lumi', 'evt',
+                'gen_index', 'qie_index',
+                'energy_depth1', 'energy_depth2', 'energy_ratio'
+            ),
+            keyIndices = (
+                None, None, None,
+                '(*)', '\\1', '\\1', '\\1', '\\1'
             ),
             summaryClass = AlphaTwirl.Summary.Scan,
         ),
