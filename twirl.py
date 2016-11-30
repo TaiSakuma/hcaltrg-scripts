@@ -38,7 +38,9 @@ def main():
         (Scribbler.GenParticle(),    NullCollector()),
         (Scribbler.HFPreRecHit(),    NullCollector()),
         (Scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 3),    NullCollector()),
+        (Scribbler.HFPreRecHitEtaPhi(), NullCollector()),
         (Scribbler.QIE10MergedDepth(), NullCollector()),
+        (Scribbler.GenMatching(), NullCollector()),
         # (Scribbler.QIE10Ag(),        NullCollector()),
         # (Scribbler.Scratch(),        NullCollector()),
         ])
@@ -81,6 +83,9 @@ def main():
         dict(keyAttrNames = ('hfrechit_depth', 'hfrechit_QIE10_index', 'hfrechit_QIE10_nRaw'),        keyIndices = ('(*)', '\\1', '\\1'), binnings = (echo, echo, Round(1, 0)  ), keyOutColumnNames = ('depth', 'idxQIE10', 'QIE10_nRaw')),
         dict(keyAttrNames = ('hfrechit_depth', 'hfrechit_QIE10_index', 'hfrechit_QIE10_soi'),         keyIndices = ('(*)', '\\1', '\\1'), binnings = (echo, echo, Round(1, 0)  ), keyOutColumnNames = ('depth', 'idxQIE10', 'QIE10_soi')),
         dict(keyAttrNames = ('QIE10MergedDepth_energy_ratio', ), keyIndices = ('*', ), binnings = (Round(0.5, 0, valid = greater_than_zero), ), keyOutColumnNames = ('QIE10_energy_ratio', )),
+        dict(keyAttrNames = ('GenMatchedSummed_energy_depth1', ), keyIndices = ('*', ), binnings = (Round(0.1, 0, valid = greater_than_zero), ), keyOutColumnNames = ('matched_energy_depth1', )),
+        dict(keyAttrNames = ('GenMatchedSummed_energy_depth2', ), keyIndices = ('*', ), binnings = (Round(0.1, 0, valid = greater_than_zero), ), keyOutColumnNames = ('matched_energy_depth2', )),
+        dict(keyAttrNames = ('GenMatchedSummed_energy_ratio', ), keyIndices = ('*', ), binnings = (Round(0.5, 0, valid = greater_than_zero), ), keyOutColumnNames = ('matched_energy_ratio', )),
     ]
 
     # complete table configs
