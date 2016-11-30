@@ -4,6 +4,12 @@ import pandas as pd
 import numpy as np
 
 ##__________________________________________________________________||
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_colwidth', 4096)
+pd.set_option('display.max_rows', 65536)
+pd.set_option('display.width', 1000)
+
+##__________________________________________________________________||
 class EventAuxiliary(object):
     # https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/DataFormats/Provenance/interface/EventAuxiliary.h
 
@@ -222,7 +228,7 @@ class QIE10MergedDepth(object):
         df = pd.DataFrame({
             'ieta': event.hfrechit_ieta,
             'iphi': event.hfrechit_iphi,
-            'index': event.hfrechit_QIE10_index,
+            'QIE10_index': event.hfrechit_QIE10_index,
             'depth': event.hfrechit_depth,
             'energy': event.hfrechit_QIE10_energy_th,
             'eta': event.hfrechit_eta,
@@ -232,14 +238,14 @@ class QIE10MergedDepth(object):
         df = pd.pivot_table(
             df,
             values = ['energy', 'eta', 'phi'],
-            index = ['ieta', 'iphi', 'index'],
+            index = ['ieta', 'iphi', 'QIE10_index'],
             columns = ['depth']).reset_index()
         df.columns = ['_'.join(['{}'.format(f) for f in e]).strip('_') for e in df]
         df['energy_ratio'] = np.where(df.energy_2 > 0, df.energy_1/df.energy_2, 0)
 
         self.QIE10MergedDepth_ieta[:] = df.ieta
         self.QIE10MergedDepth_iphi[:] = df.iphi
-        self.QIE10MergedDepth_index[:] = df.index
+        self.QIE10MergedDepth_index[:] = df.QIE10_index
         self.QIE10MergedDepth_energy_depth1[:] = df.energy_1
         self.QIE10MergedDepth_energy_depth2[:] =  df.energy_2
         self.QIE10MergedDepth_energy_ratio[:] = df.energy_ratio
@@ -290,6 +296,72 @@ class QIE10Ag(object):
 
     def end(self):
         pass
+
+##__________________________________________________________________||
+class GenMatching(object):
+    def begin(self, event):
+        self.GenMatchedSummed_gen_index = [ ]
+        self.GenMatchedSummed_qie_index = [ ]
+        self.GenMatchedSummed_energy_depth1 = [ ]
+        self.GenMatchedSummed_energy_depth2 = [ ]
+        self.GenMatchedSummed_energy_ratio = [ ]
+
+        self._attach_to_event(event)
+
+    def _attach_to_event(self, event):
+        event.GenMatchedSummed_gen_index = self.GenMatchedSummed_gen_index
+        event.GenMatchedSummed_qie_index = self.GenMatchedSummed_qie_index
+        event.GenMatchedSummed_energy_depth1 = self.GenMatchedSummed_energy_depth1
+        event.GenMatchedSummed_energy_depth2 = self.GenMatchedSummed_energy_depth2
+        event.GenMatchedSummed_energy_ratio = self.GenMatchedSummed_energy_ratio
+
+    def event(self, event):
+        self._attach_to_event(event)
+
+        df_gen = pd.DataFrame(dict(
+            gen_eta = event.genParticle_eta,
+            gen_phi = event.genParticle_phi
+        ))
+        df_gen['gen_index'] = df_gen.index
+
+        df_qie = pd.DataFrame(dict(
+            qie_index = event.QIE10MergedDepth_index,
+            energy_depth1 = event.QIE10MergedDepth_energy_depth1,
+            energy_depth2 = event.QIE10MergedDepth_energy_depth2,
+            eta_depth1 = event.QIE10MergedDepth_eta_depth1,
+            eta_depth2 = event.QIE10MergedDepth_eta_depth2,
+            phi_depth1 = event.QIE10MergedDepth_phi_depth1,
+            phi_depth2 = event.QIE10MergedDepth_phi_depth2
+        ))
+        df_qie = df_qie[(df_qie.energy_depth1 > 0) & (df_qie.energy_depth2 > 0)]
+
+        df_gen['dummy'] = 1
+        df_qie['dummy'] = 1
+        df = pd.merge(df_gen, df_qie, on = ['dummy'])
+        del df['dummy']
+
+        df['deta1'] = np.arccos(np.cos(df['gen_eta'] - df['eta_depth1']))
+        df['dphi1'] = np.arccos(np.cos(df['gen_phi'] - df['phi_depth1']))
+        df['deta2'] = np.arccos(np.cos(df['gen_eta'] - df['eta_depth2']))
+        df['dphi2'] = np.arccos(np.cos(df['gen_phi'] - df['phi_depth2']))
+        df['dr1'] = np.sqrt(df['deta1']**2 + df['dphi1']**2)
+        df['dr2'] = np.sqrt(df['deta2']**2 + df['dphi2']**2)
+
+        maxdr = 0.2
+        df['matched'] = (df['dr1'] <= maxdr) & (df['dr2'] <= maxdr)
+
+        df_matched = df[df['matched']]
+
+
+        df_summed = df_matched.groupby(['gen_index', 'qie_index'])['energy_depth1', 'energy_depth2'].sum().reset_index()
+
+        df_summed['energy_ratio'] = df_summed['energy_depth1']/df_summed['energy_depth2']
+
+        self.GenMatchedSummed_gen_index[:] = df_summed.gen_index
+        self.GenMatchedSummed_qie_index[:] = df_summed.qie_index
+        self.GenMatchedSummed_energy_depth1[:] = df_summed.energy_depth1
+        self.GenMatchedSummed_energy_depth2[:] = df_summed.energy_depth2
+        self.GenMatchedSummed_energy_ratio[:] = df_summed.energy_ratio
 
 ##__________________________________________________________________||
 class Scratch(object):
