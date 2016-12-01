@@ -340,9 +340,9 @@ class GenMatching(object):
         df = pd.merge(df_gen, df_qie, on = ['dummy'])
         del df['dummy']
 
-        df['deta1'] = np.arccos(np.cos(df['gen_eta'] - df['eta_depth1']))
+        df['deta1'] = np.abs(df['gen_eta'] - df['eta_depth1'])
         df['dphi1'] = np.arccos(np.cos(df['gen_phi'] - df['phi_depth1']))
-        df['deta2'] = np.arccos(np.cos(df['gen_eta'] - df['eta_depth2']))
+        df['deta2'] = np.abs(df['gen_eta'] - df['eta_depth2'])
         df['dphi2'] = np.arccos(np.cos(df['gen_phi'] - df['phi_depth2']))
         df['dr1'] = np.sqrt(df['deta1']**2 + df['dphi1']**2)
         df['dr2'] = np.sqrt(df['deta2']**2 + df['dphi2']**2)
