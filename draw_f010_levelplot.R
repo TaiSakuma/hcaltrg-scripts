@@ -39,7 +39,7 @@ arg.tbl.dir <- if(exists('arg.tbl.dir')) arg.tbl.dir else 'tbl_01'
 main <- function()
 {
 
-  tblFileName <- 'tbl_Scan.run.lumi.evt.ieta-wp.iphi-b1.depth-b1.idxQIE10-b1.energy-b1.energy_th-b1.txt'
+  tblFileName <- 'tbl_Scan.run.lumi.evt.ieta-wp.iphi-b1.depth-b1.idxQIE10-b1.eta-b1.phi-b1.energy-b1.energy_th-b1.txt'
 
   tblPath <- file.path(arg.tbl.dir, tblFileName)
   if(!(file.exists(tblPath))) return()
@@ -57,7 +57,6 @@ main <- function()
   dir.create(arg.outdir, recursive = TRUE, showWarnings = FALSE)
 
   tbl <- read.table(tblPath, header = TRUE)
-
   tbl$energy <- tbl$energy_th
 
   evt <- sort(unique(tbl$evt))[2:7]

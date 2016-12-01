@@ -96,6 +96,9 @@ main <- function()
   }
 
   sub('QIE10_energy_ratio', xlim = c(0, 15))
+  sub('matched_energy_ratio', xlim = c(0, 15))
+  sub('matched_energy_depth1', xlim = c(0, 300))
+  sub('matched_energy_depth2', xlim = c(0, 300))
   invisible()
 }
 
