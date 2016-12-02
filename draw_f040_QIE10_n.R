@@ -108,6 +108,7 @@ main <- function()
     }
   }
 
+  sub('energy_matched_summed')
   sub('QIE10_charge')
   sub('QIE10_energy')
   sub('QIE10_energy_th')
