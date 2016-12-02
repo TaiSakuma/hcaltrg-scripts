@@ -306,6 +306,11 @@ class GenMatching(object):
         self.GenMatchedSummed_energy_depth2 = [ ]
         self.GenMatchedSummed_energy_ratio = [ ]
 
+        self.GenMatchedSummedDepthEnergy_gen_index = [ ]
+        self.GenMatchedSummedDepthEnergy_qie_index = [ ]
+        self.GenMatchedSummedDepthEnergy_depth = [ ]
+        self.GenMatchedSummedDepthEnergy_energy = [ ]
+
         self._attach_to_event(event)
 
     def _attach_to_event(self, event):
@@ -314,6 +319,11 @@ class GenMatching(object):
         event.GenMatchedSummed_energy_depth1 = self.GenMatchedSummed_energy_depth1
         event.GenMatchedSummed_energy_depth2 = self.GenMatchedSummed_energy_depth2
         event.GenMatchedSummed_energy_ratio = self.GenMatchedSummed_energy_ratio
+
+        event.GenMatchedSummedDepthEnergy_gen_index = self.GenMatchedSummedDepthEnergy_gen_index
+        event.GenMatchedSummedDepthEnergy_qie_index = self.GenMatchedSummedDepthEnergy_qie_index
+        event.GenMatchedSummedDepthEnergy_depth = self.GenMatchedSummedDepthEnergy_depth
+        event.GenMatchedSummedDepthEnergy_energy = self.GenMatchedSummedDepthEnergy_energy
 
     def event(self, event):
         self._attach_to_event(event)
@@ -352,7 +362,6 @@ class GenMatching(object):
 
         df_matched = df[df['matched']]
 
-
         df_summed = df_matched.groupby(['gen_index', 'qie_index'])['energy_depth1', 'energy_depth2'].sum().reset_index()
 
         df_summed['energy_ratio'] = df_summed['energy_depth1']/df_summed['energy_depth2']
@@ -362,6 +371,16 @@ class GenMatching(object):
         self.GenMatchedSummed_energy_depth1[:] = df_summed.energy_depth1
         self.GenMatchedSummed_energy_depth2[:] = df_summed.energy_depth2
         self.GenMatchedSummed_energy_ratio[:] = df_summed.energy_ratio
+
+        df_summed_depth_energy = pd.melt(df_summed, id_vars = ('gen_index', 'qie_index'))
+        df_summed_depth_energy = df_summed_depth_energy[df_summed_depth_energy['variable'].isin(['energy_depth1', 'energy_depth2'])]
+        df_summed_depth_energy.rename(columns = {'variable': 'depth', 'value': 'energy'}, inplace = True)
+        df_summed_depth_energy.replace(to_replace = {'depth' : {'energy_depth1': 1, 'energy_depth2': 2}}, inplace = True)
+
+        self.GenMatchedSummedDepthEnergy_gen_index[:] = df_summed_depth_energy['gen_index']
+        self.GenMatchedSummedDepthEnergy_qie_index[:] = df_summed_depth_energy['qie_index']
+        self.GenMatchedSummedDepthEnergy_depth[:] = df_summed_depth_energy['depth']
+        self.GenMatchedSummedDepthEnergy_energy[:] = df_summed_depth_energy['energy']
 
 ##__________________________________________________________________||
 class Scratch(object):
