@@ -86,6 +86,10 @@ def main():
         dict(keyAttrNames = ('GenMatchedSummed_energy_depth1', ), keyIndices = ('*', ), binnings = (Round(0.1, 0, valid = greater_than_zero), ), keyOutColumnNames = ('matched_energy_depth1', )),
         dict(keyAttrNames = ('GenMatchedSummed_energy_depth2', ), keyIndices = ('*', ), binnings = (Round(0.1, 0, valid = greater_than_zero), ), keyOutColumnNames = ('matched_energy_depth2', )),
         dict(keyAttrNames = ('GenMatchedSummed_energy_ratio', ), keyIndices = ('*', ), binnings = (Round(0.5, 0, valid = greater_than_zero), ), keyOutColumnNames = ('matched_energy_ratio', )),
+        dict(keyAttrNames = ('GenMatchedSummed_qie_index', 'GenMatchedSummed_energy_depth1', ), keyIndices = (None, '*'), binnings = (echo, Round(0.1, 0, valid = greater_than_zero)), keyOutColumnNames = ('idxQIE10', 'matched_energy_depth1')),
+        dict(keyAttrNames = ('GenMatchedSummed_qie_index', 'GenMatchedSummed_energy_depth2', ), keyIndices = (None, '*'), binnings = (echo, Round(0.1, 0, valid = greater_than_zero)), keyOutColumnNames = ('idxQIE10', 'matched_energy_depth2')),
+        dict(keyAttrNames = ('GenMatchedSummed_qie_index', 'GenMatchedSummed_energy_ratio', ),  keyIndices = (None, '*'), binnings = (echo, Round(0.5, 0, valid = greater_than_zero)), keyOutColumnNames = ('idxQIE10', 'matched_energy_ratio')),
+        dict(keyAttrNames = ('GenMatchedSummedDepthEnergy_depth', 'GenMatchedSummedDepthEnergy_qie_index', 'GenMatchedSummedDepthEnergy_energy'),      keyIndices = ('(*)', '\\1', '\\1'), binnings = (echo, echo, Round(0.1, 0)), keyOutColumnNames = ('depth', 'idxQIE10', 'energy_matched_summed')),
     ]
 
     # complete table configs
