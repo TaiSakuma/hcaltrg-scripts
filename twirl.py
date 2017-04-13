@@ -6,7 +6,7 @@ import argparse
 import ROOT
 
 import alphatwirl
-import Framework
+import framework_cmsedm
 import Scribbler
 
 ROOT.gROOT.SetBatch(1)
@@ -112,12 +112,12 @@ def main():
     # configure data sets
     #
     dataset_names = args.dataset_names if args.dataset_names else args.input_files
-    datasets = [Framework.Dataset(n, [f]) for n, f in zip(dataset_names, args.input_files)]
+    datasets = [framework_cmsedm.Dataset(n, [f]) for n, f in zip(dataset_names, args.input_files)]
 
     #
     # run
     #
-    fw =  Framework.FrameworkCMSEDM(
+    fw =  framework_cmsedm.FrameworkCMSEDM(
         quiet = args.quiet,
         process = args.process,
         max_events_per_dataset = args.nevents,
