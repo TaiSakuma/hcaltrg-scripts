@@ -8,7 +8,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'AlphaTwirl'))
 import alphatwirl
 
 import framework_cmsedm
-import Scribbler
+import scribbler
 
 ##__________________________________________________________________||
 parser = argparse.ArgumentParser()
@@ -32,16 +32,16 @@ def main():
     #
     NullCollector = alphatwirl.loop.NullCollector
     reader_collector_pairs.extend([
-        (Scribbler.EventAuxiliary(), NullCollector()),
-        (Scribbler.MET(),            NullCollector()),
-        (Scribbler.GenParticle(),    NullCollector()),
-        (Scribbler.HFPreRecHit(),    NullCollector()),
-        (Scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 3),    NullCollector()),
-        (Scribbler.HFPreRecHitEtaPhi(), NullCollector()),
-        (Scribbler.QIE10MergedDepth(), NullCollector()),
-        (Scribbler.GenMatching(), NullCollector()),
-        # (Scribbler.QIE10Ag(),        NullCollector()),
-        # (Scribbler.Scratch(),        NullCollector()),
+        (scribbler.EventAuxiliary(), NullCollector()),
+        (scribbler.MET(),            NullCollector()),
+        (scribbler.GenParticle(),    NullCollector()),
+        (scribbler.HFPreRecHit(),    NullCollector()),
+        (scribbler.HFPreRecHit_QIE10_energy_th(min_energy = 3),    NullCollector()),
+        (scribbler.HFPreRecHitEtaPhi(), NullCollector()),
+        (scribbler.QIE10MergedDepth(), NullCollector()),
+        (scribbler.GenMatching(), NullCollector()),
+        # (scribbler.QIE10Ag(),        NullCollector()),
+        # (scribbler.Scratch(),        NullCollector()),
         ])
 
     #
