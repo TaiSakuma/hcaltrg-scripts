@@ -5,7 +5,7 @@ import argparse
 
 import ROOT
 
-import AlphaTwirl
+import alphatwirl
 import Framework
 import Scribbler
 
@@ -31,7 +31,7 @@ def main():
     #
     # configure scribblers
     #
-    NullCollector = AlphaTwirl.Loop.NullCollector
+    NullCollector = alphatwirl.loop.NullCollector
     reader_collector_pairs.extend([
         (Scribbler.EventAuxiliary(), NullCollector()),
         (Scribbler.MET(),            NullCollector()),
@@ -48,11 +48,11 @@ def main():
     #
     # configure tables
     #
-    Binning = AlphaTwirl.Binning.Binning
-    Echo = AlphaTwirl.Binning.Echo
-    Round = AlphaTwirl.Binning.Round
-    RoundLog = AlphaTwirl.Binning.RoundLog
-    Combine = AlphaTwirl.Binning.Combine
+    Binning = alphatwirl.binning.Binning
+    Echo = alphatwirl.binning.Echo
+    Round = alphatwirl.binning.Round
+    RoundLog = alphatwirl.binning.RoundLog
+    Combine = alphatwirl.binning.Combine
     echo = Echo(nextFunc = None)
     echoNextPlusOne = Echo()
     tblcfg = [
@@ -73,7 +73,7 @@ def main():
             valIndices = ('\\1', ),
             keyOutColumnNames = ('ieta', 'iphi', 'depth', 'idxQIE10'),
             valOutColumnNames = ('energy', ),
-            summaryClass = AlphaTwirl.Summary.Sum,
+            summaryClass = alphatwirl.summary.Sum,
         ),
         dict(keyAttrNames = ('hfrechit_depth', 'hfrechit_QIE10_index', 'hfrechit_QIE10_charge'),      keyIndices = ('(*)', '\\1', '\\1'), binnings = (echo, echo, Round(0.1, 0)), keyOutColumnNames = ('depth', 'idxQIE10', 'QIE10_charge')),
         dict(keyAttrNames = ('hfrechit_depth', 'hfrechit_QIE10_index', 'hfrechit_QIE10_energy'),      keyIndices = ('(*)', '\\1', '\\1'), binnings = (echo, echo, Round(0.1, 0)), keyOutColumnNames = ('depth', 'idxQIE10', 'QIE10_energy')),
@@ -93,10 +93,10 @@ def main():
     ]
 
     # complete table configs
-    tableConfigCompleter = AlphaTwirl.Configure.TableConfigCompleter(
-        defaultSummaryClass = AlphaTwirl.Summary.Count,
+    tableConfigCompleter = alphatwirl.configure.TableConfigCompleter(
+        defaultSummaryClass = alphatwirl.summary.Count,
         defaultOutDir = args.outdir,
-        createOutFileName = AlphaTwirl.Configure.TableFileNameComposer2()
+        createOutFileName = alphatwirl.configure.TableFileNameComposer2()
     )
     tblcfg = [tableConfigCompleter.complete(c) for c in tblcfg]
 
@@ -105,7 +105,7 @@ def main():
         tblcfg = [c for c in tblcfg if c['outFile'] and not os.path.exists(c['outFilePath'])]
 
     reader_collector_pairs.extend(
-        [AlphaTwirl.Configure.build_counter_collector_pair(c) for c in tblcfg]
+        [alphatwirl.configure.build_counter_collector_pair(c) for c in tblcfg]
     )
 
     #
