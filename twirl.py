@@ -7,7 +7,10 @@ import argparse
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'AlphaTwirl'))
 import alphatwirl
 
+##__________________________________________________________________||
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'utils'))
 import framework_cmsedm
+
 import scribbler
 
 ##__________________________________________________________________||
