@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Tai Sakuma <sakuma@cern.ch>
 import os, sys
+import logging
 import argparse
 
 ##__________________________________________________________________||
@@ -17,17 +18,40 @@ import scribbler
 parser = argparse.ArgumentParser()
 parser.add_argument("--input-files", default = [ ], nargs = '*', help = "list of input files")
 parser.add_argument("--dataset-names", default = [ ], nargs = '*', help = "list of data set names")
-parser.add_argument("-p", "--process", default = 1, type = int, help = "number of processes to run in parallel")
 parser.add_argument('-o', '--outdir', default = os.path.join('tbl', 'out'))
-parser.add_argument('-q', '--quiet', action = 'store_true', default = False, help = 'quiet mode')
 parser.add_argument('-n', '--nevents', default = -1, type = int, help = 'maximum number of events to process for each component')
 parser.add_argument('--max-events-per-process', default = -1, type = int, help = 'maximum number of events per process')
 parser.add_argument('--force', action = 'store_true', default = False, help = 'recreate all output files')
+
+parser.add_argument('--parallel-mode', default = 'multiprocessing', choices = ['multiprocessing', 'subprocess', 'htcondor'], help = 'mode for concurrency')
+parser.add_argument('-p', '--process', default = 4, type = int, help = 'number of processes to run in parallel')
+parser.add_argument('-q', '--quiet', default = False, action = 'store_true', help = 'quiet mode')
+parser.add_argument('--profile', action = 'store_true', help = 'run profile')
+parser.add_argument('--profile-out-path', default = None, help = 'path to write the result of profile')
+parser.add_argument('--logging-level', default = 'WARN', choices = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'], help = 'level for logging')
 args = parser.parse_args()
 
 ##__________________________________________________________________||
 def main():
 
+    #
+    # configure logger
+    #
+    log_level = logging.getLevelName(args.logging_level)
+    log_handler = logging.StreamHandler()
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    log_handler.setFormatter(log_formatter)
+
+    names_for_logger = ["framework_cmsedm", "alphatwirl"]
+    for n in names_for_logger:
+        logger = logging.getLogger(n)
+        logger.setLevel(log_level)
+        logger.handlers[:] = [ ]
+        logger.addHandler(log_handler)
+
+    #
+    #
+    #
     reader_collector_pairs = [ ]
 
     #
@@ -121,9 +145,13 @@ def main():
     #
     fw =  framework_cmsedm.FrameworkCMSEDM(
         quiet = args.quiet,
+        parallel_mode = args.parallel_mode,
         process = args.process,
+        user_modules = ('scribbler', ),
         max_events_per_dataset = args.nevents,
-        max_events_per_process = args.max_events_per_process
+        max_events_per_process = args.max_events_per_process,
+        profile = args.profile,
+        profile_out_path = args.profile_out_path
     )
     fw.run(
         datasets = datasets,
