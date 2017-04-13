@@ -9,7 +9,7 @@ import alphatwirl
 ROOT.gROOT.SetBatch(1)
 
 ##__________________________________________________________________||
-class Framework(object):
+class FrameworkCMSEDM(object):
     def __init__(self, quiet = False,
                  process = 8,
                  max_events_per_dataset = -1,

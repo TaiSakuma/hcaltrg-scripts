@@ -117,7 +117,7 @@ def main():
     #
     # run
     #
-    fw =  Framework.Framework(
+    fw =  Framework.FrameworkCMSEDM(
         quiet = args.quiet,
         process = args.process,
         max_events_per_dataset = args.nevents,
