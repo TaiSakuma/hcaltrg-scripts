@@ -5,7 +5,10 @@ import argparse
 
 import ROOT
 
+##__________________________________________________________________||
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'AlphaTwirl'))
 import alphatwirl
+
 import framework_cmsedm
 import Scribbler
 

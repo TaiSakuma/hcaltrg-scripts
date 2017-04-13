@@ -1,0 +1,3 @@
+[submodule "AlphaTwirl"]
+	path = AlphaTwirl
+	url = git@github.com:TaiSakuma/AlphaTwirl.git
