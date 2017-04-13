@@ -10,8 +10,11 @@ ROOT.gROOT.SetBatch(1)
 
 ##__________________________________________________________________||
 class FrameworkCMSEDM(object):
-    def __init__(self, quiet = False,
+    def __init__(self,
+                 quiet = False,
+                 parallel_mode = 'multiprocessing',
                  process = 8,
+                 user_modules = (),
                  max_events_per_dataset = -1,
                  max_events_per_process = -1,
                  max_files_per_dataset = -1,
