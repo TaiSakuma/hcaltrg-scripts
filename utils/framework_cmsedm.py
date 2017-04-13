@@ -1,5 +1,6 @@
 # Tai Sakuma <sakuma@cern.ch>
 import sys
+import logging
 import collections
 
 import ROOT
@@ -9,7 +10,22 @@ import alphatwirl
 ROOT.gROOT.SetBatch(1)
 
 ##__________________________________________________________________||
+import logging
+logger = logging.getLogger(__name__)
+log_handler = logging.StreamHandler(stream=sys.stdout)
+log_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+log_handler.setFormatter(log_formatter)
+logger.addHandler(log_handler)
+
+##__________________________________________________________________||
+from parallel import build_parallel
+from profile_func import profile_func
+
+##__________________________________________________________________||
 class FrameworkCMSEDM(object):
+    """A simple framework for using alphatwirl
+
+    """
     def __init__(self,
                  quiet = False,
                  parallel_mode = 'multiprocessing',
@@ -21,7 +37,12 @@ class FrameworkCMSEDM(object):
                  profile = False,
                  profile_out_path = None
     ):
-        self.progressMonitor, self.communicationChannel = alphatwirl.configure.build_progressMonitor_communicationChannel(quiet = quiet, processes = process)
+        self.parallel = build_parallel(
+            parallel_mode = parallel_mode,
+            quiet = quiet,
+            processes = process,
+            user_modules = user_modules
+        )
         self.max_events_per_dataset = max_events_per_dataset
         self.max_events_per_process = max_events_per_process
         self.max_files_per_dataset = max_files_per_dataset
@@ -35,16 +56,15 @@ class FrameworkCMSEDM(object):
         self._end()
 
     def _begin(self):
-        self.progressMonitor.begin()
-        self.communicationChannel.begin()
+        self.parallel.begin()
 
     def _configure(self, datasets, reader_collector_pairs):
         reader_top = alphatwirl.loop.ReaderComposite()
-        collector_top = alphatwirl.loop.CollectorComposite(self.progressMonitor.createReporter())
+        collector_top = alphatwirl.loop.CollectorComposite(self.parallel.progressMonitor.createReporter())
         for r, c in reader_collector_pairs:
             reader_top.add(r)
             collector_top.add(c)
-        eventLoopRunner = alphatwirl.loop.MPEventLoopRunner(self.communicationChannel)
+        eventLoopRunner = alphatwirl.loop.MPEventLoopRunner(self.parallel.communicationChannel)
         eventBuilderConfigMaker = EventBuilderConfigMaker()
         datasetIntoEventBuildersSplitter = alphatwirl.loop.DatasetIntoEventBuildersSplitter(
             EventBuilder = EventBuilder,
@@ -69,8 +89,7 @@ class FrameworkCMSEDM(object):
             profile_func(func = loop, profile_out_path = self.profile_out_path)
 
     def _end(self):
-        self.progressMonitor.end()
-        self.communicationChannel.end()
+        self.parallel.end()
 
 ##__________________________________________________________________||
 class DatasetLoop(object):
