@@ -25,7 +25,7 @@ class Parallel(object):
         self.communicationChannel.end()
 
 ##__________________________________________________________________||
-def build_parallel(parallel_mode, quiet = True, processes = 4, user_modules = [ ]):
+def build_parallel(parallel_mode, quiet = True, processes = 4, user_modules = [ ], htcondor_job_desc_extra = [ ]):
 
     default_parallel_mode = 'multiprocessing'
 
@@ -33,7 +33,8 @@ def build_parallel(parallel_mode, quiet = True, processes = 4, user_modules = [ 
         return build_parallel_dropbox(
             parallel_mode = parallel_mode,
             quiet = quiet,
-            user_modules = user_modules
+            user_modules = user_modules,
+            htcondor_job_desc_extra = htcondor_job_desc_extra
         )
 
     if not parallel_mode == default_parallel_mode:
@@ -45,7 +46,7 @@ def build_parallel(parallel_mode, quiet = True, processes = 4, user_modules = [ 
     return build_parallel_multiprocessing(quiet = quiet, processes = processes)
 
 ##__________________________________________________________________||
-def build_parallel_dropbox(parallel_mode, quiet, user_modules):
+def build_parallel_dropbox(parallel_mode, quiet, user_modules, htcondor_job_desc_extra = [ ]):
     tmpdir = '_ccsp_temp'
     user_modules = set(user_modules)
     user_modules.add('parallel')
@@ -53,7 +54,7 @@ def build_parallel_dropbox(parallel_mode, quiet, user_modules):
     alphatwirl.mkdir_p(tmpdir)
     progressMonitor = alphatwirl.progressbar.NullProgressMonitor()
     if parallel_mode == 'htcondor':
-        dispatcher = alphatwirl.concurrently.HTCondorJobSubmitter()
+        dispatcher = alphatwirl.concurrently.HTCondorJobSubmitter(job_desc_extra = htcondor_job_desc_extra)
     else:
         dispatcher = alphatwirl.concurrently.SubprocessRunner()
     workingArea = alphatwirl.concurrently.WorkingArea(

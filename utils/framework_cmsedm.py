@@ -29,23 +29,30 @@ class FrameworkCMSEDM(object):
     def __init__(self,
                  quiet = False,
                  parallel_mode = 'multiprocessing',
+                 htcondor_job_desc_extra = [ ],
                  process = 8,
                  user_modules = (),
                  max_events_per_dataset = -1,
                  max_events_per_process = -1,
                  max_files_per_dataset = -1,
+                 max_files_per_process = 1,
                  profile = False,
                  profile_out_path = None
     ):
+        user_modules = set(user_modules)
+        user_modules.add('framework_cmsedm')
+        user_modules.add('profile_func')
         self.parallel = build_parallel(
             parallel_mode = parallel_mode,
             quiet = quiet,
             processes = process,
-            user_modules = user_modules
+            user_modules = user_modules,
+            htcondor_job_desc_extra = htcondor_job_desc_extra,
         )
         self.max_events_per_dataset = max_events_per_dataset
         self.max_events_per_process = max_events_per_process
         self.max_files_per_dataset = max_files_per_dataset
+        self.max_files_per_process = max_files_per_process
         self.profile = profile
         self.profile_out_path = profile_out_path
 
@@ -71,7 +78,8 @@ class FrameworkCMSEDM(object):
             eventBuilderConfigMaker = eventBuilderConfigMaker,
             maxEvents = self.max_events_per_dataset,
             maxEventsPerRun = self.max_events_per_process,
-            maxFiles = self.max_files_per_dataset
+            maxFiles = self.max_files_per_dataset,
+            maxFilesPerRun = self.max_files_per_process
         )
         eventReader = alphatwirl.loop.EventReader(
             eventLoopRunner = eventLoopRunner,
@@ -119,12 +127,12 @@ class Dataset(object):
 
 ##__________________________________________________________________||
 class Events(object):
-    def __init__(self, path, maxEvents = -1, start = 0):
+    def __init__(self, paths, maxEvents = -1, start = 0):
 
         if start < 0:
             raise ValueError("start must be greater than or equal to zero: {} is given".format(start))
 
-        self.edm_event = EDMEvents([path])
+        self.edm_event = EDMEvents(paths)
         # https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/DataFormats/FWLite/python/__init__.py#L457
 
         nevents_in_dataset = self.edm_event.size()
@@ -143,16 +151,19 @@ class Events(object):
         self.iEvent = -1
 
 ##__________________________________________________________________||
-EventBuilderConfig = collections.namedtuple('EventBuilderConfig', 'inputPath maxEvents start dataset name')
+EventBuilderConfig = collections.namedtuple(
+    'EventBuilderConfig',
+    'inputPaths maxEvents start dataset name'
+)
 
 ##__________________________________________________________________||
 class EventBuilderConfigMaker(object):
     def __init__(self):
         pass
 
-    def create_config_for(self, dataset, file_, start, length):
+    def create_config_for(self, dataset, files, start, length):
         config = EventBuilderConfig(
-            inputPath = file_,
+            inputPaths = files,
             maxEvents = length,
             start = start,
             dataset = dataset, # for scribblers
@@ -165,18 +176,6 @@ class EventBuilderConfigMaker(object):
             return dataset.files
         return dataset.files[:min(maxFiles, len(dataset.files))]
 
-    def file_nevents_list_for(self, dataset, maxEvents, maxFiles):
-        files = self.file_list_in(dataset, maxFiles = maxFiles)
-        totalEvents = 0
-        ret = [ ]
-        for f in files:
-            if 0 <= maxEvents <= totalEvents:
-                return ret
-            n = self.nevents_in_file(f)
-            ret.append((f, n))
-            totalEvents += n
-        return ret
-
     def nevents_in_file(self, path):
         edm_event = EDMEvents([path])
         return edm_event.size()
@@ -188,7 +187,7 @@ class EventBuilder(object):
 
     def __call__(self):
         events = Events(
-            path = self.config.inputPath,
+            paths = self.config.inputPaths,
             maxEvents = self.config.maxEvents,
             start = self.config.start
         )
