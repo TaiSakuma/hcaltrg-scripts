@@ -21,6 +21,8 @@ parser.add_argument("--dataset-names", default = [ ], nargs = '*', help = "list 
 parser.add_argument('-o', '--outdir', default = os.path.join('tbl', 'out'))
 parser.add_argument('-n', '--nevents', default = -1, type = int, help = 'maximum number of events to process for each component')
 parser.add_argument('--max-events-per-process', default = -1, type = int, help = 'maximum number of events per process')
+parser.add_argument('--max-files-per-dataset', default = -1, type = int, help = 'maximum number of files per data set')
+parser.add_argument('--max-files-per-process', default = 1, type = int, help = 'maximum number of files per process')
 parser.add_argument('--force', action = 'store_true', default = False, help = 'recreate all output files')
 
 parser.add_argument('--parallel-mode', default = 'multiprocessing', choices = ['multiprocessing', 'subprocess', 'htcondor'], help = 'mode for concurrency')
@@ -143,13 +145,41 @@ def main():
     #
     # run
     #
+    htcondor_job_desc_extra_request = ['request_memory = 250']
+
+    # https://lists.cs.wisc.edu/archive/htcondor-users/2014-June/msg00133.shtml
+    # hold a job and release to a different machine after a certain minutes
+    htcondor_job_desc_extra_resubmit = [
+        'expected_runtime_minutes = 10',
+        'job_machine_attrs = Machine',
+        'job_machine_attrs_history_length = 4',
+        'requirements = target.machine =!= MachineAttrMachine1 && target.machine =!= MachineAttrMachine2 &&  target.machine =!= MachineAttrMachine3',
+        'periodic_hold = JobStatus == 2 && CurrentTime - EnteredCurrentStatus > 60 * $(expected_runtime_minutes)',
+        'periodic_hold_subcode = 1',
+        'periodic_release = HoldReasonCode == 3 && HoldReasonSubCode == 1 && JobRunCount < 3',
+        'periodic_hold_reason = ifthenelse(JobRunCount<3,"Ran too long, will retry","Ran too long")',
+    ]
+
+    # http://www.its.hku.hk/services/research/htc/jobsubmission
+    # avoid the machines "smXX.hadoop.cluster"
+    # operator '=!=' explained at https://research.cs.wisc.edu/htcondor/manual/v7.8/4_1HTCondor_s_ClassAd.html#ClassAd:evaluation-meta
+    htcondor_job_desc_extra_blacklist = [
+        'requirements = strcmp(substr(Target.Machine,0,2),"sm") =!= 0 && strcmp(substr(Target.Machine,4,15),".hadoop.cluster") =!= 0'
+    ]
+
+    ## htcondor_job_desc_extra = htcondor_job_desc_extra_request + htcondor_job_desc_extra_resubmit
+    htcondor_job_desc_extra = htcondor_job_desc_extra_request + htcondor_job_desc_extra_blacklist
+
     fw =  framework_cmsedm.FrameworkCMSEDM(
         quiet = args.quiet,
         parallel_mode = args.parallel_mode,
+        htcondor_job_desc_extra = htcondor_job_desc_extra,
         process = args.process,
         user_modules = ('scribbler', ),
         max_events_per_dataset = args.nevents,
         max_events_per_process = args.max_events_per_process,
+        max_files_per_dataset = args.max_files_per_dataset,
+        max_files_per_process = args.max_files_per_process,
         profile = args.profile,
         profile_out_path = args.profile_out_path
     )
