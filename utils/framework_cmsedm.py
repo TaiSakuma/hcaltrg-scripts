@@ -72,9 +72,9 @@ class FrameworkCMSEDM(object):
             reader_top.add(r)
             collector_top.add(c)
         eventLoopRunner = alphatwirl.loop.MPEventLoopRunner(self.parallel.communicationChannel)
-        eventBuilderConfigMaker = EventBuilderConfigMaker()
+        eventBuilderConfigMaker = alphatwirl.cmsedm.EventBuilderConfigMaker()
         datasetIntoEventBuildersSplitter = alphatwirl.loop.DatasetIntoEventBuildersSplitter(
-            EventBuilder = EventBuilder,
+            EventBuilder = alphatwirl.cmsedm.CMSEDMEventBuilder,
             eventBuilderConfigMaker = eventBuilderConfigMaker,
             maxEvents = self.max_events_per_dataset,
             maxEventsPerRun = self.max_events_per_process,
@@ -124,91 +124,5 @@ class Dataset(object):
             self.name,
             self.files
         )
-
-##__________________________________________________________________||
-class Events(object):
-    def __init__(self, paths, maxEvents = -1, start = 0):
-
-        if start < 0:
-            raise ValueError("start must be greater than or equal to zero: {} is given".format(start))
-
-        self.edm_event = EDMEvents(paths)
-        # https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/DataFormats/FWLite/python/__init__.py#L457
-
-        nevents_in_dataset = self.edm_event.size()
-        start = min(nevents_in_dataset, start)
-        if maxEvents > -1:
-            self.nEvents = min(nevents_in_dataset - start, maxEvents)
-        else:
-            self.nEvents = nevents_in_dataset - start
-        self.start = start
-        self.iEvent = -1
-
-    def __iter__(self):
-        for self.iEvent in xrange(self.nEvents):
-            self.edm_event.to(self.start + self.iEvent)
-            yield self
-        self.iEvent = -1
-
-##__________________________________________________________________||
-EventBuilderConfig = collections.namedtuple(
-    'EventBuilderConfig',
-    'inputPaths maxEvents start dataset name'
-)
-
-##__________________________________________________________________||
-class EventBuilderConfigMaker(object):
-    def __init__(self):
-        pass
-
-    def create_config_for(self, dataset, files, start, length):
-        config = EventBuilderConfig(
-            inputPaths = files,
-            maxEvents = length,
-            start = start,
-            dataset = dataset, # for scribblers
-            name = dataset.name # for the progress report writer
-        )
-        return config
-
-    def file_list_in(self, dataset, maxFiles):
-        if maxFiles < 0:
-            return dataset.files
-        return dataset.files[:min(maxFiles, len(dataset.files))]
-
-    def nevents_in_file(self, path):
-        edm_event = EDMEvents([path])
-        return edm_event.size()
-
-##__________________________________________________________________||
-class EventBuilder(object):
-    def __init__(self, config):
-        self.config = config
-
-    def __call__(self):
-        events = Events(
-            paths = self.config.inputPaths,
-            maxEvents = self.config.maxEvents,
-            start = self.config.start
-        )
-        events.config = self.config
-        events.dataset = self.config.dataset.name
-        return events
-
-##__________________________________________________________________||
-def loadLibraries():
-    argv_org = list(sys.argv)
-    sys.argv = [e for e in sys.argv if e != '-h']
-    ROOT.gSystem.Load("libFWCoreFWLite")
-    ROOT.AutoLibraryLoader.enable()
-    ROOT.gSystem.Load("libDataFormatsFWLite")
-    ROOT.gSystem.Load("libDataFormatsPatCandidates")
-    sys.argv = argv_org
-
-##__________________________________________________________________||
-loadLibraries()
-from DataFormats.FWLite import Handle
-from DataFormats.FWLite import Events as EDMEvents
-# https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/DataFormats/FWLite/python/__init__.py
 
 ##__________________________________________________________________||
